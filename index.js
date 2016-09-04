@@ -9,7 +9,7 @@ var port = process.env.PORT || 8080;
 
 
 app.get('/', function (req, res) {
-    res.send('Hello World!');
+    res.send('Hello World! I was deployed from github!');
 });
 
 app.listen(port, function () {

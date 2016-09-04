@@ -1,0 +1,43 @@
+{
+  "name": "node-js-getting-started",
+  "version": "0.2.5",
+  "description": "A sample Node.js app using Express 4",
+  "engines": {
+    "node": "5.9.1"
+  },
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "~1.0.0",
+    "connect-flash": "~0.1.1",
+    "cookie-parser": "~1.0.0",
+    "ejs": "2.4.1",
+    "express": "^4.13.3",
+    "express-session": "~1.0.0",
+    "http": "0.0.0",
+    "method-override": "~1.0.0",
+    "morgan": "~1.0.0",
+    "mysql2": "^1.0.0-rc.11",
+    "passport": "~0.1.17",
+    "passport-facebook": "~1.0.2",
+    "passport-google-oauth": "~0.1.5",
+    "passport-local": "~0.1.6",
+    "passport-twitter": "~1.0.2",
+    "socket.io": "^1.4.8"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rstruthers1/retro-board"
+  },
+  "keywords": [
+    "node",
+    "heroku",
+    "express",
+    "agile",
+    "retro"
+  ],
+  "license": "MIT"
+}

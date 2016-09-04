@@ -9,7 +9,7 @@ var port = process.env.PORT || 8080;
 
 
 app.get('/', function (req, res) {
-    res.send('Hello World! I was deployed from github!');
+    res.send('Hello World! I was deployed from github! Test autodeploy');
 });
 
 app.listen(port, function () {

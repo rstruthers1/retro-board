@@ -1,0 +1,8 @@
+{
+  "name": "Easy Retro Board",
+  "description": "Easy Retro Board",
+  "repository": "https://github.com/heroku/easy-retro-board",
+  "logo": "http://easy-retro-board.herokuapp.com/node.svg",
+  "keywords": ["node", "express", "static"],
+  "image": "heroku/nodejs"
+}

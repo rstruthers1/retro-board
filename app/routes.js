@@ -2,6 +2,9 @@
  * Created by Rachel on 9/4/2016.
  */
 
+var RetroBoardDb = require('./retroboarddb');
+var db = new RetroBoardDb();
+
 
 module.exports = function(app, passport) {
 
@@ -23,10 +26,33 @@ module.exports = function(app, passport) {
         res.render('pages/login.ejs', { message: req.flash('loginMessage')});
     });
 
+    app.post('/login', passport.authenticate('local-login',
+        {
+            successRedirect : '/',
+            failureRedirect: '/login',
+            failureFlash: true
+        }
+        )
+    );
+
+
+    // process the login form
+    // app.post('/login', do all our passport stuff here);
+
+    // =====================================
+    // SIGNUP ==============================
+    // =====================================
+
     app.get('/signup', function(req, res) {
 
         // render the page and pass in any flash data if it exists
         res.render('pages/signup.ejs', { message: req.flash('loginMessage')});
     });
+
+    app.post('/signup', passport.authenticate('local-signup', {
+        successRedirect : '/', // redirect to the secure profile section
+        failureRedirect : '/signup', // redirect back to the signup page if there is an error
+        failureFlash : true // allow flash messages
+    }));
 
 }

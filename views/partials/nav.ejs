@@ -5,6 +5,15 @@
                 <a href="/"><span class="glyphicon glyphicon-home"></span>Home</a>
             </li>
         </ul>
+        <ul class="nav navbar-nav navbar-right">
 
+            <li class="navbar-right">
+                <% if (login) {%>
+                <a href="/logout">Log out</a>
+                <% } else {%>
+                <a href="/login">Log in</a>
+                <% }%>
+            </li>
+        </ul>
     </div>
 </nav>

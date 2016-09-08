@@ -35,9 +35,14 @@ module.exports = function(app, passport) {
         )
     );
 
+    // =====================================
+    // LOGOUT ==============================
+    // =====================================
+    app.get('/logout', function(req, res) {
+        req.logout();
+        res.redirect('/');
+    });
 
-    // process the login form
-    // app.post('/login', do all our passport stuff here);
 
     // =====================================
     // SIGNUP ==============================

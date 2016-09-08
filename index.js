@@ -106,21 +106,16 @@ app.use(express.static(__dirname + '/public'));
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-/**
-app.use(session({
-    secret: 'appsecret',
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        secure: true,
-        maxAge: new Date(Date.now() + 3600000)
-    }
-}));**/
-
 app.use(session({ secret: 'ilovescotchscotchyscotchscotch' })); // session secret
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session
+
+app.use(function(req,res,next){
+    res.locals.login = req.isAuthenticated();
+    res.locals.user = req.user;
+    next();
+});
 
 
 require('./app/routes.js')(app, passport);

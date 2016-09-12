@@ -6,7 +6,7 @@ var RetroBoardDb = require('./retroboarddb');
 var db = new RetroBoardDb();
 
 
-module.exports = function(app, passport) {
+module.exports = function (app, passport) {
 
     // =====================================
     // HOME PAGE (with login links) ========
@@ -20,25 +20,47 @@ module.exports = function(app, passport) {
     // LOGIN ===============================
     // =====================================
     // show the login form
-    app.get('/login', function(req, res) {
+    app.get('/login', function (req, res) {
 
         // render the page and pass in any flash data if it exists
-        res.render('pages/login.ejs', { message: req.flash('loginMessage')});
+        res.render('pages/login.ejs', {message: req.flash('loginMessage'),
+            email: req.flash("email")});
     });
 
+    /**
     app.post('/login', passport.authenticate('local-login',
         {
-            successRedirect : '/',
+            successRedirect: '/',
             failureRedirect: '/login',
             failureFlash: true
         }
         )
     );
+     **/
+
+    app.post('/login', function (req, res, next) {
+        passport.authenticate('local-login', function (err, user, info) {
+            console.log("in !user, firstname: " + req.body.firstname);
+            req.flash("email", req.body.email);
+            if (err) {
+                return next(err);
+            }
+            if (!user) {
+                return res.redirect('/login' );
+            }
+            req.logIn(user, function (err) {
+                if (err) {
+                    return next(err);
+                }
+                return res.redirect('/');
+            });
+        })(req, res, next);
+    });
 
     // =====================================
     // LOGOUT ==============================
     // =====================================
-    app.get('/logout', function(req, res) {
+    app.get('/logout', function (req, res) {
         req.logout();
         res.redirect('/');
     });
@@ -48,25 +70,60 @@ module.exports = function(app, passport) {
     // SIGNUP ==============================
     // =====================================
 
-    app.get('/signup', function(req, res) {
+    app.get('/signup', function (req, res) {
 
         // render the page and pass in any flash data if it exists
-        res.render('pages/signup.ejs', { message: req.flash('loginMessage')});
+        res.render('pages/signup.ejs', {message: req.flash('signupMessage'),
+            firstname: req.flash("firstname"),
+            lastname: req.flash("lastname"),
+            username: req.flash("username"),
+            email: req.flash("email")
+        });
     });
 
-    app.post('/signup', passport.authenticate('local-signup', {
+    /**
+     app.post('/signup', passport.authenticate('local-signup', {
         successRedirect : '/', // redirect to the secure profile section
         failureRedirect : '/signup', // redirect back to the signup page if there is an error
         failureFlash : true // allow flash messages
     }));
+     **/
+
+    app.post('/signup', function (req, res, next) {
+        passport.authenticate('local-signup', function (err, user, info) {
+            console.log("in !user, firstname: " + req.body.firstname);
+            req.flash("firstname", req.body.firstname);
+            req.flash("lastname", req.body.lastname);
+            req.flash("username", req.body.username);
+            req.flash("email", req.body.email);
+            if (err) {
+                return next(err);
+            }
+            if (!user) {
+                return res.redirect('/signup' );
+            }
+            req.logIn(user, function (err) {
+                if (err) {
+                    return next(err);
+                }
+                return res.redirect('/');
+            });
+        })(req, res, next);
+    });
 
     // =====================================
     // PROFILE ==============================
     // =====================================
 
-    app.get('/profile', isLoggedIn, function(req, res) {
+    app.get('/profile', isLoggedIn, function (req, res) {
+        var user = req.user;
 
-        res.render('pages/profile.ejs');
+        res.render('pages/profile.ejs', {message: req.flash('profileMessage'),
+            firstname: req.user.firstname,
+            lastname: req.user.lastname,
+            username: req.user.username,
+            email: req.user.email
+        });
     });
 
     // route middleware to make sure a user is logged in

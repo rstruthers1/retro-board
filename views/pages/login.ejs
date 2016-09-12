@@ -1,50 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/additional-methods.min.js"></script>
+
+
+    <link rel="stylesheet" type="text/css" href="/css/cmxformTemplate.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/cmxformmine.css"/>
     <title>Easy Retro Board: Login</title>
 
     <% include ../partials/header.ejs %>
+
+    <script>
+        $.validator.setDefaults({
+        });
+
+        $().ready(function () {
+
+
+            // validate signup form on keyup and submit
+            $("#signupForm").validate({
+                rules: {
+                    password: {
+                        required: true,
+                        minlength: 5
+                    },
+                    email: {
+                        required: true,
+                        email: true
+                    }
+                },
+                messages: {
+
+                    password: {
+                        required: "Please provide a password",
+                        minlength: "Your password must be at least 5 characters long"
+                    },
+
+                    email: "Please enter a valid email address"
+
+                }
+            });
+
+
+
+
+        });
+        </script>
+
 </head>
 <body style="background-color: #d9ccee">
 <% include ../partials/nav.ejs %>
 <div class="container">
-    <div class="jumbotron text-center">
-        <div class="container">
-            <h1>Welcome to Easy Retro Board!</h1>
-            <p>Easily Do Your Retros Online</p>
-        </div>
-    </div>
+    <div class="row" style="padding-top: 30px;">
 
-    <div class="row">
-        <div class="col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3">
-            <form role="form" action="/login" method="post">
-                <h2>Please Login <small>with your email address and password</small></h2>
-                <hr style="background-color: #532F8C">
+        <div class="col-md-6 col-sm-offset-2 col-md-offset-3" style="background-color: cornsilk; border-radius: 6px;">
 
+            <form class="cmxform form-inline form-horizontal" id="loginForm" action="/login" method="post"
+                  style="padding-top: 30px">
+                <% if (message.length > 0) { %>
+                <div class="alert alert-danger"><%= message %></div>
+                <% } %>
+                <fieldset>
+                    <legend>Please Login</legend>
 
-                <div class="form-group">
-                    <input type="email" name="email" id="email" class="form-control input-lg"
-                           placeholder="Email Address" tabindex="1">
-                </div>
-                <div class="form-group">
-                    <input type="password" name="password" id="password" class="form-control input-lg"
-                           placeholder="Password" tabindex="2">
-                </div>
+                    <p>
+                        <label for="email">Email</label>
+                        <input id="email" name="email" type="email" class="form-control input-sm" style="width: 300px;"
+                               value="<%= email %>">
+                    </p>
 
-
-                <hr style="background-color: #532F8C">
-                <div class="row">
+                    <p>
+                        <label for="password">Password</label>
+                        <input id="password" name="password" type="password" class="form-control input-sm"
+                               style="width: 300px;"  >
+                    </p>
 
 
-                        <div class="col-xs-12 col-md-6"><input type="submit" value="Login" class="btn btn-primary btn-block btn-lg" tabindex="7"></div>
 
-                </div>
-                <div class="row" style="padding-top: 20px;">
-                    <div class="col-xs-12 col-md-6">Need an account?&nbsp;&nbsp;<a href="/signup">Sign up</a></div>
-                </div>
+
+                    <hr style="background-color: #532F8C">
+                    <div class="row">
+
+                        <div class="col-xs-12 col-md-6"><input type="submit" value="Sign in"
+                                                               class="btn btn-primary btn-block btn-lg"
+                                                               tabindex="7">
+                        </div>
+
+                    </div>
+                    <div class="row" style="padding-top: 20px;">
+                        <div class="col-xs-12 col-md-6">Need an account?&nbsp;&nbsp;<a href="/signup">Sign
+                                up</a>
+                        </div>
+                    </div>
+                </fieldset>
+
             </form>
         </div>
     </div>
+
 
 </div>
 

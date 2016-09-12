@@ -67,7 +67,7 @@ passport.use('local-signup', new Strategy(
                 db.findByUsername(req.body.username, function(err, user) {
                     if (user) { return cb(null, false, req.flash('signupMessage', 'That username is already taken.')); }
                     else {
-                        var user = new User(email, password, req.body.display_name, req.body.first_name, req.body.last_name);
+                        var user = new User(email, password, req.body.username, req.body.firstname, req.body.lastname);
                         db.insertUser(user, function (err) {
                             if (err) {
                                 return cb(err);

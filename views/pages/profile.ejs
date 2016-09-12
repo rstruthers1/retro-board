@@ -2,75 +2,137 @@
 <html lang="en">
 <head>
     <% include ../partials/header.ejs %>
-    <title>Easy Retro Board: Sign Up</title>
+
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/additional-methods.min.js"></script>
+    <title>Easy Retro Board: Your Profile</title>
+    <link rel="stylesheet" type="text/css" href="/css/cmxformTemplate.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/cmxformmine.css"/>
+
+
+    <script>
+        $.validator.setDefaults({
+        });
+
+        $().ready(function () {
+
+            // validate signup form on keyup and submit
+            $("#profileForm").validate({
+                rules: {
+                    firstname: "required",
+                    lastname: "required",
+                    username: {
+                        required: true,
+                        minlength: 6
+                    },
+                    password: {
+                        required: true,
+                        minlength: 8
+                    },
+                    confirm_password: {
+                        required: true,
+                        minlength: 8,
+                        equalTo: "#password"
+                    },
+                    email: {
+                        required: true,
+                        email: true
+                    },
+                    agree: "required"
+                },
+                messages: {
+                    firstname: "Please enter your firstname",
+                    lastname: "Please enter your lastname",
+                    username: {
+                        required: "Please enter a username",
+                        minlength: "Your username must consist of at least 6 characters"
+                    },
+                    password: {
+                        required: "Please provide a password",
+                        minlength: "Your password must be at least 8 characters long"
+                    },
+                    confirm_password: {
+                        required: "Please provide a password",
+                        minlength: "Your password must be at least 8 characters long",
+                        equalTo: "Please enter the same password as above"
+                    },
+                    email: "Please enter a valid email address",
+                    agree: "Please accept our policy"
+                }
+            });
+
+
+        });
+    </script>
 
 
 </head>
 <body style="background-color: #d9ccee">
 <% include ../partials/nav.ejs %>
 <div class="container">
-    <!--
-    <div class="jumbotron text-center">
-        <div class="container">
-            <h1>Welcome to Easy Retro Board!</h1>
-            <p>Easily Do Your Retros Online</p>
-        </div>
-    </div>
-    -->
+    <div class="row" style="padding-top: 30px;">
+
+        <div class="col-md-6 col-sm-offset-2 col-md-offset-3" style="background-color: cornsilk; border-radius: 6px;">
+
+            <form class="cmxform form-inline form-horizontal" id="profileForm" action="/profile" method="post"
+                  style="padding-top: 30px">
+                <% if (message.length > 0) { %>
+                <div class="alert alert-danger"><%= message %></div>
+                <% } %>
+                <fieldset>
+                    <legend>Your Profile</legend>
+                    <p>
+                        <label for="firstname">First name</label>
+                        <input id="firstname" name="firstname" type="text" class="form-control input-sm"
+                               style="width: 300px;" value="<%= firstname %>">
+                    </p>
+
+                    <p>
+                        <label for=" lastname">Last name</label>
+                        <input id="lastname" name="lastname" type="text" class="form-control input-sm"
+                               style="width: 300px;"  value="<%= lastname %>">
+                    </p>
+                    <p>
+                        <label for="username">User name</label>
+                        <input id="username" name="username" type="text" class="form-control input-sm"
+                               style="width: 300px;"  value="<%= username %>">
+                    </p>
+                    <p>
+                        <label for="email">Email</label>
+                        <input id="email" name="email" type="email" class="form-control input-sm" style="width: 300px;"
+                               value="<%= email %>" disabled>
+                    </p>
+                    <p>
+                        <label for="password">Password</label>
+                        <input id="password" name="password" type="password" class="form-control input-sm"
+                               style="width: 300px;"  >
+                    </p>
+                    <p>
+                        <label for="confirm_password">Confirm password</label>
+                        <input id="confirm_password" name="confirm_password" type="password"
+                               class="form-control input-sm" style="width: 300px;">
+                    </p>
 
 
-    <div class="row">
-        <div class="col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3">
-            <form role="form" action="/profile" method="post">
-                <h2>Your Profile</h2>
-                <hr style="background-color: #532F8C">
-                <div class="row">
-                    <div class="col-xs-12 col-sm-6 col-md-6">
-                        <div class="form-group">
-                            <input type="text" name="first_name" id="first_name" class="form-control input-lg"
-                                   placeholder="First Name" tabindex="1" value="<%= user.firstname%>">
-                        </div>
-                    </div>
-                    <div class="col-xs-12 col-sm-6 col-md-6">
-                        <div class="form-group">
-                            <input type="text" name="last_name" id="last_name" class="form-control input-lg"
-                                   placeholder="Last Name" tabindex="2" value="<%= user.lastname%>">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <input type="text" name="display_name" id="display_name" class="form-control input-lg"
-                           placeholder="Display Name" tabindex="3">
-                </div>
-                <div class="form-group">
-                    <input type="email" name="email" id="email" class="form-control input-lg"
-                           placeholder="Email Address" tabindex="4">
-                </div>
-                <div class="row">
-                    <div class="col-xs-12 col-sm-6 col-md-6">
-                        <div class="form-group">
-                            <input type="password" name="password" id="password" class="form-control input-lg"
-                                   placeholder="Password" tabindex="5">
-                        </div>
-                    </div>
-                    <div class="col-xs-12 col-sm-6 col-md-6">
-                        <div class="form-group">
-                            <input type="password" name="password_confirmation" id="password_confirmation"
-                                   class="form-control input-lg" placeholder="Confirm Password" tabindex="6">
-                        </div>
-                    </div>
-                </div>
 
-                <hr style="background-color: #532F8C">
-                <div class="row">
-                    <div class="col-xs-12 col-md-6"><input type="submit" value="Save Changes"
-                                                           class="btn btn-primary btn-block btn-lg" tabindex="7"></div>
+                    <hr style="background-color: #532F8C">
+                    <div class="row">
 
-                </div>
+                        <div class="col-xs-12 col-md-6"><input type="submit" value="Save changes"
+                                                               class="btn btn-primary btn-block btn-lg"
+                                                               tabindex="7">
+                        </div>
+
+                    </div>
+
+                </fieldset>
 
             </form>
         </div>
     </div>
+
+
+
 
 
 </div>

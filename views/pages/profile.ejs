@@ -57,11 +57,8 @@
                         equalTo: "Please enter the same password as above"
                     },
                     email: "Please enter a valid email address",
-                    agree: "Please accept our policy"
                 }
             });
-
-
         });
     </script>
 
@@ -81,6 +78,7 @@
                 <% } %>
                 <fieldset>
                     <legend>Your Profile</legend>
+                    <input id="id" name="id" type="hidden" value="<%= id %>">
                     <p>
                         <label for="firstname">First name</label>
                         <input id="firstname" name="firstname" type="text" class="form-control input-sm"
@@ -100,7 +98,7 @@
                     <p>
                         <label for="email">Email</label>
                         <input id="email" name="email" type="email" class="form-control input-sm" style="width: 300px;"
-                               value="<%= email %>" disabled>
+                               value="<%= email %>">
                     </p>
                     <p>
                         <label for="password">Password</label>
@@ -112,8 +110,6 @@
                         <input id="confirm_password" name="confirm_password" type="password"
                                class="form-control input-sm" style="width: 300px;">
                     </p>
-
-
 
                     <hr style="background-color: #532F8C">
                     <div class="row">
@@ -130,11 +126,6 @@
             </form>
         </div>
     </div>
-
-
-
-
-
 </div>
 
 </body>

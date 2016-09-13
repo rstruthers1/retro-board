@@ -4,13 +4,13 @@
 
 var bcrypt   = require('bcrypt-nodejs');
 
-function User(email, password, username, firstname, lastname) {
+function User(email, password, username, firstname, lastname, id) {
     this.email = email;
     this.password_hash = bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
     this.username = username;
     this.firstname = firstname;
     this.lastname = lastname;
-    this.id = null;
+    this.id = id;
 }
 
 User.prototype.validPassword = function(password) {

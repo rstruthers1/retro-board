@@ -21,26 +21,13 @@ module.exports = function (app, passport) {
     // =====================================
     // show the login form
     app.get('/login', function (req, res) {
-
         // render the page and pass in any flash data if it exists
         res.render('pages/login.ejs', {message: req.flash('loginMessage'),
             email: req.flash("email")});
     });
 
-    /**
-    app.post('/login', passport.authenticate('local-login',
-        {
-            successRedirect: '/',
-            failureRedirect: '/login',
-            failureFlash: true
-        }
-        )
-    );
-     **/
-
     app.post('/login', function (req, res, next) {
         passport.authenticate('local-login', function (err, user, info) {
-            console.log("in !user, firstname: " + req.body.firstname);
             req.flash("email", req.body.email);
             if (err) {
                 return next(err);
@@ -81,17 +68,8 @@ module.exports = function (app, passport) {
         });
     });
 
-    /**
-     app.post('/signup', passport.authenticate('local-signup', {
-        successRedirect : '/', // redirect to the secure profile section
-        failureRedirect : '/signup', // redirect back to the signup page if there is an error
-        failureFlash : true // allow flash messages
-    }));
-     **/
-
     app.post('/signup', function (req, res, next) {
         passport.authenticate('local-signup', function (err, user, info) {
-            console.log("in !user, firstname: " + req.body.firstname);
             req.flash("firstname", req.body.firstname);
             req.flash("lastname", req.body.lastname);
             req.flash("username", req.body.username);
@@ -122,13 +100,13 @@ module.exports = function (app, passport) {
             firstname: req.user.firstname,
             lastname: req.user.lastname,
             username: req.user.username,
-            email: req.user.email
+            email: req.user.email,
+            id: req.user.id
         });
     });
 
     // route middleware to make sure a user is logged in
     function isLoggedIn(req, res, next) {
-
         // if user is authenticated in the session, carry on
         if (req.isAuthenticated())
             return next();

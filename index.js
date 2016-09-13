@@ -89,12 +89,12 @@ passport.use('local-signup', new Strategy(
 // serializing, and querying the user record by ID from the database when
 // deserializing.
 passport.serializeUser(function(user, cb) {
-    cb(null, user.email);
+    cb(null, user.id);
 });
 
-passport.deserializeUser(function(email, cb) {
+passport.deserializeUser(function(id, cb) {
     var db = new RetroBoardDb();
-    db.findByEmail(email, function (err, user) {
+    db.findById(id, function (err, user) {
         if (err) { return cb(err); }
         cb(null, user);
     });

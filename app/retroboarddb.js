@@ -14,17 +14,7 @@ function RetroBoardDb() {
 RetroBoardDb.prototype.findById = function(id, callback) {
     pool.getConnection(function(error, connection) {
         connection.query('SELECT * FROM user WHERE id = ?', [id], function(error, results, fields) {
-            var user = null;
-            console.log(results);
-            if (results && results.length > 0) {
-                user = new User();
-                user.email = results[0].email;
-                user.password_hash = results[0].password_hash;
-                user.id = results[0].id;
-                user.username = results[0].username;
-                user.firstname = results[0].first_name;
-                user.lastname = results[0].last_name;
-            }
+            var user = createUserFromDatabaseResults(results);
             callback(error, user);
             connection.release();
         });
@@ -35,17 +25,7 @@ RetroBoardDb.prototype.findById = function(id, callback) {
 RetroBoardDb.prototype.findByEmail = function(email, callback) {
     pool.getConnection(function(error, connection) {
         connection.query('SELECT * FROM user WHERE email = ?', [email], function(error, results, fields) {
-            var user = null;
-            console.log(results);
-            if (results && results.length > 0) {
-                user = new User();
-                user.email = results[0].email;
-                user.password_hash = results[0].password_hash;
-                user.id = results[0].id;
-                user.username = results[0].username;
-                user.firstname = results[0].first_name;
-                user.lastname = results[0].last_name;
-            }
+            var user = createUserFromDatabaseResults(results);
             callback(error, user);
             connection.release();
         });
@@ -55,17 +35,7 @@ RetroBoardDb.prototype.findByEmail = function(email, callback) {
 RetroBoardDb.prototype.findByUsername = function(username, callback) {
     pool.getConnection(function(error, connection) {
         connection.query('SELECT * FROM user WHERE username = ?', [username], function(error, results, fields) {
-            var user = null;
-            console.log(results);
-            if (results && results.length > 0) {
-                user = new User();
-                user.email = results[0].email;
-                user.password_hash = results[0].password_hash;
-                user.id = results[0].id;
-                user.username = results[0].username;
-                user.firstname = results[0].first_name;
-                user.lastname = results[0].last_name;
-            }
+            var user = createUserFromDatabaseResults(results);
             callback(error, user);
             connection.release();
         });
@@ -86,5 +56,19 @@ RetroBoardDb.prototype.insertUser = function(user, callback) {
         });
     });
 };
+
+function createUserFromDatabaseResults(results) {
+    var user = null;
+    if (results && results.length > 0) {
+        user = new User();
+        user.email = results[0].email;
+        user.password_hash = results[0].password_hash;
+        user.id = results[0].id;
+        user.username = results[0].username;
+        user.firstname = results[0].first_name;
+        user.lastname = results[0].last_name;
+    }
+    return user;
+}
 
 module.exports = RetroBoardDb;

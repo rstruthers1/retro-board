@@ -105,6 +105,11 @@ module.exports = function (app, passport) {
         });
     });
 
+    app.post('/profile', isLoggedIn, function (req, res, next) {
+        var user = req.user;
+        res.redirect("/profile");
+    });
+
     // route middleware to make sure a user is logged in
     function isLoggedIn(req, res, next) {
         // if user is authenticated in the session, carry on

@@ -57,6 +57,28 @@ RetroBoardDb.prototype.insertUser = function(user, callback) {
     });
 };
 
+RetroBoardDb.prototype.updateUser = function(user, callback) {
+    var error = null;
+    var userValues = {email: user.email, username: user.username,
+        first_name: user.firstname, last_name: user.lastname};
+    console.log("---- updateUser");
+    console.log("username: " + user.username);
+    console.log("id: " + user.id);
+    var update = "UPDATE user SET " +
+        "username = '" + user.username  + "' " + 
+        " WHERE id = " + user.id;
+
+    pool.getConnection(function(error, connection) {
+        connection.query(update, function(error, results, fields) {
+            if (error) {
+                console.log("--- error: " + error);
+            }
+            callback(error, user);
+            connection.release();
+        });
+    });
+};
+
 function createUserFromDatabaseResults(results) {
     var user = null;
     if (results && results.length > 0) {

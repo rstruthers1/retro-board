@@ -23,8 +23,14 @@
             // validate signup form on keyup and submit
             $("#profileForm").validate({
                 rules: {
-                    firstname: "required",
-                    lastname: "required",
+                    firstname: {
+                        required: true,
+                        minlength: 2
+                    },
+                    lastname: {
+                        required: true,
+                        minlength: 2
+                    },
                     username: {
                         required: true,
                         minlength: 6
@@ -66,7 +72,7 @@
                         minlength: "Your password must be at least 8 characters long",
                         equalTo: "Please enter the same password as above"
                     },
-                    email: "Please enter a valid email address",
+                    email: "Please enter a valid email address"
                 }
             });
         });
@@ -86,6 +92,27 @@
                 <% if (message.length > 0) { %>
                 <div class="alert alert-danger"><%= message %></div>
                 <% } %>
+
+                <% if (error_firstname.length > 0) { %>
+                <div class="alert alert-danger"><%= error_firstname %></div>
+                <% } %>
+
+                <% if (error_lastname.length > 0) { %>
+                <div class="alert alert-danger"><%= error_lastname %></div>
+                <% } %>
+
+                <% if (error_username.length > 0) { %>
+                <div class="alert alert-danger"><%= error_username %></div>
+                <% } %>
+
+                <% if (error_email.length > 0) { %>
+                <div class="alert alert-danger"><%= error_email %></div>
+                <% } %>
+
+                <% if (error_password.length > 0) { %>
+                <div class="alert alert-danger"><%= error_password %></div>
+                <% } %>
+
                 <fieldset>
                     <legend>Your Profile</legend>
                     <input id="id" name="id" type="hidden" value="<%= id %>">

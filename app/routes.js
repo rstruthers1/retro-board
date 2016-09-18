@@ -101,17 +101,20 @@ module.exports = function (app, passport) {
         var lastname = user.lastname;
         var username = user.username;
         var email = user.email;
+        console.log("app.get, var email: " + email);
         if (req.flash("profile_submit").toString() == "true") {
             firstname = req.flash("firstname");
             lastname = req.flash("lastname");
             username = req.flash("username");
             email = req.flash("email");
+            console.log("app.get, profile_submit is true, email: " + email);
         }
-
+        console.log("app.get: email = " + email);
         res.render('pages/profile.ejs', {message: req.flash('profileMessage'),
+            error_message: req.flash('error_profileMessage'),
             firstname: firstname,
             lastname: lastname,
-            username:username,
+            username: username,
             email: email,
             error_firstname: req.flash('error_firstname'),
             error_lastname: req.flash('error_lastname'),
@@ -124,13 +127,17 @@ module.exports = function (app, passport) {
 
     app.post('/profile', isLoggedIn, function (req, res, next) {
         var user = req.user;
+        console.log("app.post, req.body.email: " + req.body.email);
         req.flash("profile_submit", "true");
         req.flash("firstname", req.body.firstname);
         req.flash("lastname", req.body.lastname);
         req.flash("username", req.body.username);
+        req.flash("email", "");
         req.flash("email", req.body.email);
 
+      //  console.log("app.post, req.flash('email'): " + req.flash('email'));
 
+        console.log("app.post, calling validateProfile, email = " + req.body.email);
         var valid = validateProfile(req);
 
         if (!valid) {
@@ -144,23 +151,25 @@ module.exports = function (app, passport) {
             var userUniquenessChecker = new UserUniquenessChecker(user, username, email);
             userUniquenessChecker.run(function(error) {
                 if (error) {
-                    req.flash("profileMessage", error);
+                    req.flash("error_profileMessage", error);
                     res.redirect("/profile");
                     return;
                 }
                 user = new User(email, password, username, firstname, lastname, user.id);
                 db.updateUser(user, function(error, user) {
                     if (error) {
-                        req.flash("profileMessage", error);
+                        console.log("database error, email: " + user.email);
+                        req.flash("error_profileMessage", error.toString());
                         res.redirect("/profile");
                         return;
                     }
                     req.logIn(user, function (err) {
                         if (err) {
-                            req.flash("profileMessage", err);
+                            req.flash("error_profileMessage", err.toString());
                             res.redirect("/profile");
                             return;
                         }
+                        req.flash("profileMessage", "Profile updated");
                         res.redirect('/profile');
                     });
                 });
@@ -177,6 +186,7 @@ module.exports = function (app, passport) {
         var password = req.body.password.trim();
         var confirmPassword = req.body.confirm_password.trim();
 
+        console.log("validateProfile");
         console.log("firstname: " + firstname);
         console.log("lastname: " + lastname);
         console.log("username: " + username);

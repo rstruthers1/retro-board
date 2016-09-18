@@ -90,7 +90,10 @@
             <form class="cmxform form-inline form-horizontal" id="profileForm" action="/profile" method="post"
                   style="padding-top: 30px">
                 <% if (message.length > 0) { %>
-                <div class="alert alert-danger"><%= message %></div>
+                <div class="alert alert-success"><%= message %></div>
+                <% } %>
+                <% if (error_message.length > 0) { %>
+                <div class="alert alert-danger"><%= error_message %></div>
                 <% } %>
 
                 <% if (error_firstname.length > 0) { %>

@@ -63,10 +63,18 @@ RetroBoardDb.prototype.updateUser = function(user, callback) {
         first_name: user.firstname, last_name: user.lastname};
     console.log("---- updateUser");
     console.log("username: " + user.username);
+    console.log("email: " + user.email);
     console.log("id: " + user.id);
     var update = "UPDATE user SET " +
-        "username = '" + user.username  + "' " + 
-        " WHERE id = " + user.id;
+        "first_name = '" + user.firstname + "', " +
+        "last_name = '" + user.lastname + "', " +
+        "username = '" + user.username  + "', " +
+        "email = '" + user.email  + "' ";
+    if (user.password_hash && user.password_hash.length > 0) {
+        update += ", password_hash = '" + user.password_hash + "' ";
+    }
+
+    update += " WHERE id = " + user.id;
 
     pool.getConnection(function(error, connection) {
         connection.query(update, function(error, results, fields) {

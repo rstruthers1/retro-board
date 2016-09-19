@@ -87,6 +87,10 @@ RetroBoardDb.prototype.updateUser = function(user, callback) {
     });
 };
 
+RetroBoardDb.prototype.updateUserResetInfo = function(email, resetPasswordToken, resetPasswordExpires, callback) {
+
+};
+
 function createUserFromDatabaseResults(results) {
     var user = null;
     if (results && results.length > 0) {

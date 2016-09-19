@@ -15,6 +15,8 @@ function User(email, password, username, firstname, lastname, id) {
     this.firstname = firstname;
     this.lastname = lastname;
     this.id = id;
+    this.resetPasswordToken = null;
+    this.resetPasswordExpires = null;
 }
 
 User.prototype.validPassword = function(password) {

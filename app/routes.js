@@ -2,11 +2,17 @@
  * Created by Rachel on 9/4/2016.
  */
 
+var validator = require('validator');
+var async = require('async');
+var crypto = require('crypto');
+var nodemailer = require('nodemailer');
+
 var RetroBoardDb = require('./retroboarddb');
 var db = new RetroBoardDb();
-var validator = require('validator');
 var UserUniquenessChecker = require('./models/userUniquenessChecker');
 var User = require('./models/user');
+
+
 
 module.exports = function (app, passport) {
 
@@ -224,6 +230,63 @@ module.exports = function (app, passport) {
 
         return valid;
     }
+
+    // =====================================
+    // FORGOT PASSWORD
+    // =====================================
+    app.get('/forgot', function (req, res) {
+
+        res.render('pages/forgot', {error_message: req.flash('error_forgotMessage'),
+            message: req.flash('forgotMessage')});
+    });
+
+    app.post('/forgot', function (req, res, next) {
+        /**
+        async.waterfall([
+            function(done) {
+                crypto.randomBytes(20, function(err, buf) {
+                    var token = buf.toString('hex');
+                    done(err, token);
+                });
+            },
+            function(token, done) {
+                db.findByEmail(req.body.email, function(error, user) {
+                    if (!user) {
+                        req.flash('error_forgotMessage', 'No account with that email address exists.');
+                        return res.redirect('/forgot');
+                    }
+
+                    user.resetPasswordToken = token;
+                    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+                });
+            },
+        ]);
+         **/
+        var smtpTransport = nodemailer.createTransport('SMTP', {
+            service: 'SendGrid',
+            auth: {
+                user: process.env.SENDGRID_USER,
+                pass: process.env.SENDGRID_PASSWORD
+            }
+        });
+        var mailOptions = {
+            to: req.body.email,
+            from: 'passwordreset@demo.com',
+            subject: 'test',
+            text: 'Hello,\n\n' +
+            'This is a test\n'
+        };
+        smtpTransport.sendMail(mailOptions, function(err, info) {
+            if (err) {
+                req.flash('error_forgotMessage', 'Error sending email. ' + err.toString());
+            } else {
+                req.flash('forgotMessage', 'Email sent. ');
+            }
+            res.redirect('/forgot');
+        });
+
+    });
 
     // route middleware to make sure a user is logged in
     function isLoggedIn(req, res, next) {

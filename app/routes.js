@@ -263,6 +263,7 @@ module.exports = function (app, passport) {
             },
         ]);
          **/
+        console.log("process.env.SENDGRID_USER: " + process.env.SENDGRID_USER);
         var smtpTransport = nodemailer.createTransport('SMTP', {
             service: 'SendGrid',
             auth: {

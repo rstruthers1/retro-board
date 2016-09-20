@@ -263,11 +263,11 @@ module.exports = function (app, passport) {
             },
         ]);
          **/
-        console.log("process.env.SENDGRID_USER: " + process.env.SENDGRID_USER);
+        console.log("process.env.SENDGRID_USERNAME: " + process.env.SENDGRID_USERNAME);
         var smtpTransport = nodemailer.createTransport('SMTP', {
             service: 'SendGrid',
             auth: {
-                user: process.env.SENDGRID_USER,
+                user: process.env.SENDGRID_USERNAME,
                 pass: process.env.SENDGRID_PASSWORD
             }
         });

@@ -3,8 +3,10 @@
  */
 var mysql = require("mysql2");
 var bcrypt = require("bcrypt-nodejs");
-var User = require('./models/user');
 var pool = mysql.createPool(process.env.CLEARDB_DATABASE_URL);
+var moment = require('moment');
+
+var User = require('./models/user');
 
 
 function RetroBoardDb() {
@@ -42,6 +44,16 @@ RetroBoardDb.prototype.findByUsername = function(username, callback) {
     });
 };
 
+RetroBoardDb.prototype.findByResetPasswordToken = function(resetPasswordToken, callback) {
+    pool.getConnection(function(error, connection) {
+        connection.query('SELECT * FROM user WHERE reset_password_token = ?', [resetPasswordToken], function(error, results, fields) {
+            var user = createUserFromDatabaseResults(results);
+            callback(error, user);
+            connection.release();
+        });
+    });
+};
+
 RetroBoardDb.prototype.insertUser = function(user, callback) {
     var userValues = {email: user.email, password_hash: user.password_hash, username: user.username,
         first_name: user.firstname, last_name: user.lastname};
@@ -59,12 +71,6 @@ RetroBoardDb.prototype.insertUser = function(user, callback) {
 
 RetroBoardDb.prototype.updateUser = function(user, callback) {
     var error = null;
-    var userValues = {email: user.email, username: user.username,
-        first_name: user.firstname, last_name: user.lastname};
-    console.log("---- updateUser");
-    console.log("username: " + user.username);
-    console.log("email: " + user.email);
-    console.log("id: " + user.id);
     var update = "UPDATE user SET " +
         "first_name = '" + user.firstname + "', " +
         "last_name = '" + user.lastname + "', " +
@@ -88,7 +94,43 @@ RetroBoardDb.prototype.updateUser = function(user, callback) {
 };
 
 RetroBoardDb.prototype.updateUserResetInfo = function(email, resetPasswordToken, resetPasswordExpires, callback) {
+    var error = null;
+    var dateTimeString = resetPasswordExpires.format("YYYY-MM-DD HH:mm:ss");
+    console.log("dateTimeString: " + dateTimeString);
+    var update = "UPDATE user SET " +
+        "reset_password_token = '" + resetPasswordToken + "', " +
+        "reset_password_expires = '" + dateTimeString + "' " +
+        "WHERE email = '" + email + "'";
 
+    pool.getConnection(function(error, connection) {
+        connection.query(update, function(error, results, fields) {
+            if (error) {
+                console.log("--- error: " + error);
+            }
+            callback(error);
+            connection.release();
+        });
+    });
+};
+
+RetroBoardDb.prototype.clearUserResetInfoAndSetPassword = function(user, callback) {
+    var error = null;
+
+    var update = "UPDATE user SET " +
+        "reset_password_token = null, " +
+        "reset_password_expires = null, " +
+            "password_hash = '" + user.password_hash + "' " +
+        "WHERE email = '" + user.email + "'";
+
+    pool.getConnection(function(error, connection) {
+        connection.query(update, function(error, results, fields) {
+            if (error) {
+                console.log("--- error: " + error);
+            }
+            callback(error);
+            connection.release();
+        });
+    });
 };
 
 function createUserFromDatabaseResults(results) {
@@ -101,6 +143,8 @@ function createUserFromDatabaseResults(results) {
         user.username = results[0].username;
         user.firstname = results[0].first_name;
         user.lastname = results[0].last_name;
+        user.resetPasswordToken = results[0].reset_password_token;
+        user.resetPasswordExpires = results[0].reset_password_expires;
     }
     return user;
 }

@@ -5,11 +5,9 @@
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/jquery.validate.min.js"></script>
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/additional-methods.min.js"></script>
 
-
+    <title>Easy Retro Board: Reset Password</title>
     <link rel="stylesheet" type="text/css" href="/css/cmxformTemplate.css"/>
     <link rel="stylesheet" type="text/css" href="/css/cmxformmine.css"/>
-    <title>Easy Retro Board: Forgot Password</title>
-
 
 
     <script>
@@ -17,56 +15,67 @@
         });
 
         $().ready(function () {
-            // validate signup form on keyup and submit
-            $("#forgotForm").validate({
-                rules: {
 
-                    email: {
+            // validate signup form on keyup and submit
+            $("#resetForm").validate({
+                rules: {
+                    password: {
                         required: true,
-                        email: true
+                        minlength: 8
+                    },
+                    confirm_password: {
+                        required: true,
+                        minlength: 8,
+                        equalTo: "#password"
                     }
                 },
                 messages: {
-
-                    email: "Please enter a valid email address"
-
+                    password: {
+                        required: "Please provide a password",
+                        minlength: "Your password must be at least 8 characters long"
+                    },
+                    confirm_password: {
+                        required: "Please provide a password",
+                        minlength: "Your password must be at least 8 characters long",
+                        equalTo: "Please enter the same password as above"
+                    }
                 }
             });
         });
-        </script>
+    </script>
 
 </head>
 <body style="background-color: #d9ccee">
 <% include ../partials/nav.ejs %>
 <div class="container">
+
     <div class="row" style="padding-top: 30px;">
 
         <div class="col-md-6 col-sm-offset-2 col-md-offset-3" style="background-color: cornsilk; border-radius: 6px;">
 
-            <form class="cmxform form-inline form-horizontal" id="forgotForm" action="/forgot" method="post"
+            <form class="cmxform form-inline form-horizontal" id="resetForm" action="/reset" method="post"
                   style="padding-top: 30px">
-                <% if (error_message.length > 0) { %>
-                <div class="alert alert-danger"><%= error_message %></div>
-                <% } %>
                 <% if (message.length > 0) { %>
                 <div class="alert alert-success"><%= message %></div>
                 <% } %>
                 <fieldset>
-                    <legend>Please enter your email address</legend>
-
+                    <legend>Reset Password</legend>
+                    <input type="hidden" id="email" name="email" value="<%= user.email %>">
+                    <input type="hidden" id="token" name="token" value="<%= user.resetPasswordToken %>">
                     <p>
-                        <label for="email">Email</label>
-                        <input id="email" name="email" type="email" class="form-control input-sm" style="width: 300px;"
-                               value="<%= email %>">
+                        <label for="password">Password</label>
+                        <input id="password" name="password" type="password" class="form-control input-sm"
+                               style="width: 300px;"  >
                     </p>
-
                     <p>
-                        <span style="font-style: italic">We will email a link to the above email address that you can use to reset your password.</span>
+                        <label for="confirm_password">Confirm password</label>
+                        <input id="confirm_password" name="confirm_password" type="password"
+                               class="form-control input-sm" style="width: 300px;">
                     </p>
                     <hr style="background-color: #532F8C">
                     <div class="row">
 
-                        <div class="col-xs-12 col-md-6"><input type="submit" value="Reset password"
+                        <div class="col-xs-12 col-md-6"><input type="submit" value="Update Password"
                                                                class="btn btn-primary btn-block btn-lg"
                                                                tabindex="7">
                         </div>
@@ -77,8 +86,6 @@
             </form>
         </div>
     </div>
-
-
 </div>
 
 </body>

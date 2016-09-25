@@ -378,6 +378,23 @@ module.exports = function (app, passport) {
         });
     });
 
+    // =====================================
+    // Create Board
+    // =====================================
+
+    app.get('/board-create', isLoggedIn, function (req, res, next) {
+
+        res.render('pages/board-create', {
+            message: req.flash("createMessage"),
+            error_message: ""
+        });
+    });
+
+    app.post('/board-create', isLoggedIn, function (req, res, next) {
+        req.flash("createMessage", "Feature not implemented yet.")
+        res.redirect('/board-create');
+    });
+
     // route middleware to make sure a user is logged in
     function isLoggedIn(req, res, next) {
         // if user is authenticated in the session, carry on

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/header.ejs %>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/additional-methods.min.js"></script>
+
+
+    <link rel="stylesheet" type="text/css" href="/css/cmxformTemplate.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/cmxformmine.css"/>
+    <title>Easy Retro Board: Create a Board</title>
+
+
+
+    <script>
+        $.validator.setDefaults({
+        });
+
+        $().ready(function () {
+            // validate signup form on keyup and submit
+            $("#boardCreateForm").validate({
+                rules: {
+
+                    name: {
+                        required: true,
+                        minlength: 6
+                    }
+                },
+                messages: {
+
+                    name: "Please enter a board name of at least 6 characters"
+
+                }
+            });
+        });
+        </script>
+
+</head>
+<body style="background-color: #d9ccee">
+<% include ../partials/nav.ejs %>
+<div class="container">
+    <div class="row" style="padding-top: 30px;">
+
+        <div class="col-md-6 col-sm-offset-2 col-md-offset-3" style="background-color: cornsilk; border-radius: 6px;">
+
+            <form class="cmxform form-inline form-horizontal" id="boardCreateForm" action="/board-create" method="post"
+                  style="padding-top: 30px">
+                <% if (error_message.length > 0) { %>
+                <div class="alert alert-danger"><%= error_message %></div>
+                <% } %>
+                <% if (message.length > 0) { %>
+                <div class="alert alert-success"><%= message %></div>
+                <% } %>
+                <fieldset>
+                    <legend>Create a New Board</legend>
+
+                    <p>
+                        <label for="name">Name</label>
+                        <input id="name" name="name" type="name" class="form-control input-sm" style="width: 300px;">
+                    </p>
+
+                    <hr style="background-color: #532F8C">
+                    <div class="row">
+
+                        <div class="col-xs-12 col-md-6"><input type="submit" value="Create Board"
+                                                               class="btn btn-primary btn-block btn-lg"
+                                                               tabindex="7">
+                        </div>
+
+                    </div>
+                </fieldset>
+
+            </form>
+        </div>
+    </div>
+
+
+</div>
+
+</body>
+</html>

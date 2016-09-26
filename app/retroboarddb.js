@@ -7,6 +7,7 @@ var pool = mysql.createPool(process.env.CLEARDB_DATABASE_URL);
 var moment = require('moment');
 
 var User = require('./models/user');
+var Board = require('./models/board');
 
 
 function RetroBoardDb() {
@@ -26,6 +27,10 @@ RetroBoardDb.prototype.findById = function(id, callback) {
 
 RetroBoardDb.prototype.findByEmail = function(email, callback) {
     pool.getConnection(function(error, connection) {
+        if (error) {
+            console.log("error: " + error.toString());
+            callback(error, null);
+        }
         connection.query('SELECT * FROM user WHERE email = ?', [email], function(error, results, fields) {
             var user = createUserFromDatabaseResults(results);
             callback(error, user);
@@ -128,6 +133,26 @@ RetroBoardDb.prototype.clearUserResetInfoAndSetPassword = function(user, callbac
                 console.log("--- error: " + error);
             }
             callback(error);
+            connection.release();
+        });
+    });
+};
+
+RetroBoardDb.prototype.insertBoard = function(boardName, ownerId, callback) {
+    var now = moment();
+    var dateTimeString = now.format("YYYY-MM-DD HH:mm:ss");
+    var boardValues = {name: boardName, owner_id: ownerId, create_date_time: dateTimeString};
+
+    pool.getConnection(function(error, connection) {
+        connection.query('INSERT INTO board SET ?', boardValues, function(error, results, fields) {
+            var board = new Board();
+            if (results) {
+                board.id = results.insertId;
+                board.name = boardName
+                board.ownerId = ownerId;
+                board.create_date_time = now;
+            }
+            callback(error, board);
             connection.release();
         });
     });

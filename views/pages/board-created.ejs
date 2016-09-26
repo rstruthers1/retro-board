@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/header.ejs %>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/additional-methods.min.js"></script>
+
+
+    <link rel="stylesheet" type="text/css" href="/css/cmxformTemplate.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/cmxformmine.css"/>
+    <title>Easy Retro Board: Board Created</title>
+
+
+</head>
+<body style="background-color: #d9ccee">
+<% include ../partials/nav.ejs %>
+<div class="container">
+    <div class="row" style="padding-top: 30px;">
+
+        <div class="col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3">
+            <% if (message.length > 0) { %>
+            <div style="font-style: bold; font-size: 24px; padding-bottom: 30px;"><%= message %></div>
+            <% } %>
+            <div class="col-md-6 col-sm-offset-2 col-md-offset-3">
+                <a href="#" class="btn btn-primary btn-block btn-lg">Go to Board</a>
+            </div>
+        </div>
+
+
+    </div>
+
+
+</div>
+
+</body>
+</html>

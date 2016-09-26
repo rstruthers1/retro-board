@@ -12,6 +12,7 @@ var RetroBoardDb = require('./retroboarddb');
 var db = new RetroBoardDb();
 var UserUniquenessChecker = require('./models/userUniquenessChecker');
 var User = require('./models/user');
+var Board = require('./models/board');
 
 
 
@@ -114,9 +115,7 @@ module.exports = function (app, passport) {
             lastname = req.flash("lastname");
             username = req.flash("username");
             email = req.flash("email");
-            console.log("app.get, profile_submit is true, email: " + email);
         }
-        console.log("app.get: email = " + email);
         res.render('pages/profile.ejs', {message: req.flash('profileMessage'),
             error_message: req.flash('error_profileMessage'),
             firstname: firstname,
@@ -134,7 +133,6 @@ module.exports = function (app, passport) {
 
     app.post('/profile', isLoggedIn, function (req, res, next) {
         var user = req.user;
-        console.log("app.post, req.body.email: " + req.body.email);
         req.flash("profile_submit", "true");
         req.flash("firstname", req.body.firstname);
         req.flash("lastname", req.body.lastname);
@@ -142,9 +140,6 @@ module.exports = function (app, passport) {
         req.flash("email", "");
         req.flash("email", req.body.email);
 
-      //  console.log("app.post, req.flash('email'): " + req.flash('email'));
-
-        console.log("app.post, calling validateProfile, email = " + req.body.email);
         var valid = validateProfile(req);
 
         if (!valid) {
@@ -165,7 +160,6 @@ module.exports = function (app, passport) {
                 user = new User(email, password, username, firstname, lastname, user.id);
                 db.updateUser(user, function(error, user) {
                     if (error) {
-                        console.log("database error, email: " + user.email);
                         req.flash("error_profileMessage", error.toString());
                         res.redirect("/profile");
                         return;
@@ -192,12 +186,6 @@ module.exports = function (app, passport) {
         var email = req.body.email.trim();
         var password = req.body.password.trim();
         var confirmPassword = req.body.confirm_password.trim();
-
-        console.log("validateProfile");
-        console.log("firstname: " + firstname);
-        console.log("lastname: " + lastname);
-        console.log("username: " + username);
-        console.log("email: " + email);
 
         var valid = true;
 
@@ -293,10 +281,8 @@ module.exports = function (app, passport) {
             ], function (err) {
 
                 if (err) {
-                    console.log("err: " + err);
                     return next(err);
                 }
-                console.log("no err");
                 req.flash('forgotMessage', 'Email sent.');
                 res.redirect('/forgot');
             }
@@ -314,8 +300,6 @@ module.exports = function (app, passport) {
                 req.flash('error_forgotMessage', 'Password reset token is invalid or has expired.');
                 return res.redirect('/forgot');
             }
-            console.log("user.resetPasswordExpire: " + user.resetPasswordExpires);
-            console.log("user.resetPasswordToken: " + user.resetPasswordToken);
             if (Date.now() > user.resetPasswordExpires) {
                 req.flash('error_forgotMessage', 'Password reset token is invalid or has expired.');
                 return res.redirect('/forgot');
@@ -383,16 +367,33 @@ module.exports = function (app, passport) {
     // =====================================
 
     app.get('/board-create', isLoggedIn, function (req, res, next) {
-
         res.render('pages/board-create', {
             message: req.flash("createMessage"),
-            error_message: ""
+            error_message: req.flash("error_createMessage"),
+            name: req.flash("board_name")
         });
     });
 
     app.post('/board-create', isLoggedIn, function (req, res, next) {
-        req.flash("createMessage", "Feature not implemented yet.")
-        res.redirect('/board-create');
+        req.flash("board_name", req.body.name);
+        db.insertBoard(req.body.name, req.user.id, function(error, board) {
+            if (error) {
+                req.flash("error_createMessage", error.toString());
+                res.redirect("/board-create");
+                return;
+            }
+            req.flash("createMessage", 'Board "' + board.name + '" created successfully!');
+            res.redirect('/board-created');
+        });
+
+    });
+
+    app.get('/board-created', isLoggedIn, function (req, res, next) {
+        res.render('pages/board-created', {
+            message: req.flash("createMessage"),
+            error_message: req.flash("error_createMessage"),
+            name: req.flash("board_name")
+        });
     });
 
     // route middleware to make sure a user is logged in

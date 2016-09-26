@@ -148,7 +148,7 @@ RetroBoardDb.prototype.insertBoard = function(boardName, ownerId, callback) {
             var board = new Board();
             if (results) {
                 board.id = results.insertId;
-                board.name = boardName
+                board.name = boardName;
                 board.ownerId = ownerId;
                 board.create_date_time = now;
             }

@@ -383,16 +383,28 @@ module.exports = function (app, passport) {
                 return;
             }
             req.flash("createMessage", 'Board "' + board.name + '" created successfully!');
+            req.flash("boardCreatedId", board.id);
             res.redirect('/board-created');
-        });
 
+        });
     });
 
     app.get('/board-created', isLoggedIn, function (req, res, next) {
         res.render('pages/board-created', {
             message: req.flash("createMessage"),
             error_message: req.flash("error_createMessage"),
-            name: req.flash("board_name")
+            name: req.flash("board_name"),
+            board_id: req.flash("boardCreatedId")
+        });
+    });
+
+    // =====================================
+    // Board
+    // =====================================
+
+    app.get('/board', isLoggedIn, function (req, res, next) {
+        res.render('pages/board', {
+            board_id: req.query.boardId
         });
     });
 

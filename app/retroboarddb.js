@@ -16,6 +16,10 @@ function RetroBoardDb() {
 
 RetroBoardDb.prototype.findById = function(id, callback) {
     pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
         connection.query('SELECT * FROM user WHERE id = ?', [id], function(error, results, fields) {
             var user = createUserFromDatabaseResults(results);
             callback(error, user);
@@ -41,6 +45,10 @@ RetroBoardDb.prototype.findByEmail = function(email, callback) {
 
 RetroBoardDb.prototype.findByUsername = function(username, callback) {
     pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
         connection.query('SELECT * FROM user WHERE username = ?', [username], function(error, results, fields) {
             var user = createUserFromDatabaseResults(results);
             callback(error, user);
@@ -51,6 +59,10 @@ RetroBoardDb.prototype.findByUsername = function(username, callback) {
 
 RetroBoardDb.prototype.findByResetPasswordToken = function(resetPasswordToken, callback) {
     pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
         connection.query('SELECT * FROM user WHERE reset_password_token = ?', [resetPasswordToken], function(error, results, fields) {
             var user = createUserFromDatabaseResults(results);
             callback(error, user);
@@ -64,6 +76,10 @@ RetroBoardDb.prototype.insertUser = function(user, callback) {
         first_name: user.firstname, last_name: user.lastname};
 
     pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
         connection.query('INSERT INTO user SET ?', userValues, function(error, results, fields) {
             if (results) {
                 user.id = results.insertId;
@@ -88,6 +104,10 @@ RetroBoardDb.prototype.updateUser = function(user, callback) {
     update += " WHERE id = " + user.id;
 
     pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
         connection.query(update, function(error, results, fields) {
             if (error) {
                 console.log("--- error: " + error);
@@ -108,6 +128,10 @@ RetroBoardDb.prototype.updateUserResetInfo = function(email, resetPasswordToken,
         "WHERE email = '" + email + "'";
 
     pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
         connection.query(update, function(error, results, fields) {
             if (error) {
                 console.log("--- error: " + error);
@@ -128,6 +152,10 @@ RetroBoardDb.prototype.clearUserResetInfoAndSetPassword = function(user, callbac
         "WHERE email = '" + user.email + "'";
 
     pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
         connection.query(update, function(error, results, fields) {
             if (error) {
                 console.log("--- error: " + error);
@@ -144,15 +172,62 @@ RetroBoardDb.prototype.insertBoard = function(boardName, ownerId, callback) {
     var boardValues = {name: boardName, owner_id: ownerId, create_date_time: dateTimeString};
 
     pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
         connection.query('INSERT INTO board SET ?', boardValues, function(error, results, fields) {
             var board = new Board();
             if (results) {
                 board.id = results.insertId;
                 board.name = boardName;
                 board.ownerId = ownerId;
-                board.create_date_time = now;
+                board.create_date_time = now.toDate();
             }
             callback(error, board);
+            connection.release();
+        });
+    });
+};
+
+RetroBoardDb.prototype.findBoardsByOwnerId = function(ownerId, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        connection.query('SELECT * FROM board WHERE owner_id = ?', [ownerId], function(error, results, fields) {
+            var boards = createBoardsFromDatabaseResults(results);
+            callback(error, boards);
+            connection.release();
+        });
+    });
+};
+
+RetroBoardDb.prototype.findBoardById = function(id, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        connection.query('SELECT * FROM board WHERE id = ?', [id], function(error, results, fields) {
+            var board = createBoardFromDatabaseResults(results);
+            callback(error, board);
+            connection.release();
+        });
+    });
+};
+
+RetroBoardDb.prototype.hasPermissionToView = function(userId, boardId, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        connection.query('SELECT * FROM board WHERE id = ? and owner_id = ?', [boardId, userId], function(error, results, fields) {
+            var board = createBoardFromDatabaseResults(results);
+            var hasPermission = (board != null);
+            callback(error, hasPermission);
             connection.release();
         });
     });
@@ -173,5 +248,26 @@ function createUserFromDatabaseResults(results) {
     }
     return user;
 }
+
+function createBoardsFromDatabaseResults(results) {
+    var boards = null;
+    if (results) {
+        boards = [];
+        for (var i = 0; i < results.length; i++) {
+            var board = new Board(results[i].name, results[i].owner_id, results[i].create_date_time, results[i].id);
+            boards.push(board);
+        }
+    }
+    return boards;
+}
+
+function createBoardFromDatabaseResults(results) {
+    var boards = createBoardsFromDatabaseResults(results);
+    if (!boards || boards.length == 0) {
+        return null;
+    }
+    return boards[0];
+}
+
 
 module.exports = RetroBoardDb;

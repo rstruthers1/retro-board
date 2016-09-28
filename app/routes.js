@@ -22,7 +22,17 @@ module.exports = function (app, passport) {
     // HOME PAGE (with login links) ========
     // =====================================
     app.get('/', function (req, res) {
-        res.render('pages/index');
+        var boards = null;
+        if (req.isAuthenticated()) {
+            db.findBoardsByOwnerId(req.user.id, function(err, boards) {
+                res.render('pages/index', {
+                    boards: boards
+                });
+                return;
+            });
+        } else {
+            res.render('pages/index');
+        }
     });
 
 
@@ -403,8 +413,34 @@ module.exports = function (app, passport) {
     // =====================================
 
     app.get('/board', isLoggedIn, function (req, res, next) {
-        res.render('pages/board', {
-            board_id: req.query.boardId
+
+        db.hasPermissionToView(req.user.id, req.query.boardId, function(err, hasPermission) {
+            if (err) {
+                res.render('pages/board', {
+                    board: null,
+                    error_message: err.toString()
+                });
+                return;
+            }
+            if (hasPermission) {
+
+                db.findBoardById(req.query.boardId, function (err, board) {
+                    var boardErrorMessage = "";
+                    if (err) {
+                        boardErrorMessage = err.toString();
+                    }
+                    res.render('pages/board', {
+                        board: board,
+                        error_message: boardErrorMessage
+                    });
+                });
+            } else {
+                res.render('pages/board', {
+                    board: null,
+                    error_message: "You do not have permission to view this board."
+                });
+                return;
+            }
         });
     });
 

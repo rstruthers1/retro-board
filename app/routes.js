@@ -48,6 +48,7 @@ module.exports = function (app, passport) {
 
     app.post('/login', function (req, res, next) {
         passport.authenticate('local-login', function (err, user, info) {
+            req.flash("email", null);
             req.flash("email", req.body.email);
             if (err) {
                 return next(err);

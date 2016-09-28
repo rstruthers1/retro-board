@@ -10,6 +10,79 @@
     <link rel="stylesheet" type="text/css" href="/css/cmxformmine.css"/>
     <title>Easy Retro Board: Your Board</title>
     <style>
+        .sticky {
+            background-color: yellow;
+
+            color: #333;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+            padding: 10px;
+            font-family: Arial;
+            font-size: 10px;
+            font-weight: bold;
+            overflow:auto;
+            box-shadow: 0 2px 2px 1px rgba(0,0,0,0.3);
+        }
+
+        .ui-dialog {
+
+            background-color: yellow;
+
+            color: #333;
+
+            margin: 0 auto;
+            padding: 10px;
+            font-family: Arial;
+
+            box-shadow: 0 2px 2px 1px rgba(0,0,0,0.3);
+
+        }
+
+        .ui-dialog .ui-widget-content {
+
+            background-color: yellow;
+
+            color: #333;
+
+            margin: 0 auto;
+            padding: 10px;
+
+
+        }
+
+        .sticky-text-dialog {
+
+            background-color: yellow;
+
+            color: #333;
+
+            margin: 0 auto;
+            font-family: Arial;
+            font-size: 12px;
+            font-weight: bold;
+
+            border-style: none;
+            border-color: Transparent;
+            overflow: auto;
+
+            resize: none;
+            outline: none;
+            width: 100%;
+            padding: 0px;
+            border: none;
+            height: 100%;
+            margin: -10px;
+        }
+
+        .ui-dialog-titlebar {
+            display: none;
+        }
+
+        .sticky-active {
+
+        }
+
         .sticky-canvas-quadrant {
             max-width: 50%;
             max-height: 50%;
@@ -32,12 +105,164 @@
             display:block;
         }
 
+        .center-me {
+            margin:0 auto;
+            width: 50px;
+        }
+
         .navbar-brand {
             transform: translateX(-50%);
             left: 50%;
             position: absolute;
         }
     </style>
+    <script>
+        function generateUUID() {
+            var d = new Date().getTime();
+            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = (d + Math.random()*16)%16 | 0;
+                d = Math.floor(d/16);
+                return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+            });
+            return uuid;
+        };
+
+        var stickies = [];
+
+        function Sticky(message, x, y, id) {
+            this.message = message;
+            this.x = x;
+            this.y = y;
+            this.id = id;
+        }
+
+
+        $(document).ready(function(){
+            $("#sticky-canvas").droppable(
+                    {
+                        drop: function(event, ui) {
+                            console.log("Sticky dropped :" + ui.draggable.attr('id'));
+                            //setStickyLayerToHighestOnCanvas(ui.draggable.attr('id'));
+                        }
+                    }
+            );
+
+
+            function addSticky(message) {
+                var stickyCanvasWidth = $("#sticky-canvas").width();
+                var stickyCanvasHeight = $("#sticky-canvas").height();
+                var x = stickyCanvasWidth /2 - 50;
+                var y = stickyCanvasHeight /2 - 50;
+                var posStyle = "position: absolute; top: " + y + "px; left: " + x + "px;";
+                console.log("posStyle: " + posStyle);
+                var currentId = generateUUID();
+                var sticky = new Sticky(message, x, y, currentId);
+                stickies.push(sticky);
+                console.log(stickies);
+                $("#sticky-canvas").append('<div class="sticky ui-widget-content sticky-active" id="' + currentId + '" style="' + posStyle + '"></div>');
+                $("#" + currentId).text(message);
+                $("#" + currentId ).draggable(
+                        {containment: $("#sticky-canvas")}
+                );
+                $("#" + currentId).on("dragstart",function( event, ui ) {
+                    setStickyLayerToHighestOnCanvas($(this).attr('id'));
+                }  );
+                $("#" + currentId).dblclick(function(e){
+                    console.log("double click happened");
+                    showDialog($(this).attr('id'));
+                });
+                $("#" + currentId).css("z-index", 0);
+                setStickyLayerToHighestOnCanvas(currentId);
+                return currentId;
+            }
+
+            function setStickyLayerToHighestOnCanvas(stickyId) {
+                var maxLayer = 1;
+                $(".sticky").each(function(index, element) {
+                    var zLayer = parseInt($(this).css("z-index"));
+                    console.log("zLayer: " + zLayer);
+                    if (zLayer > maxLayer) {
+                        maxLayer = zLayer;
+                    }
+                });
+                console.log("maxLayer: " + maxLayer);
+                console.log("z-index for sticky with id " + stickyId + ": " + $("#" + stickyId).css("z-index"));
+                if (maxLayer > parseInt($("#" + stickyId).css("z-index"))) {
+                    $("#" + stickyId).css("z-index", maxLayer + 1);
+                }
+            }
+
+            function addOrUpdateSticky(stickyId, message) {
+                if (!stickyId) {
+                    addSticky(message);
+                } else {
+                    console.log("stickyId = " + stickyId);
+                    $("#" + stickyId).text(message);
+                }
+            }
+
+            $("#new-sticky-button").click(function (e) {
+                showDialog("");
+            });
+
+            function showDialog(stickyId)
+            {
+                $("#dialog-modal").data("stickyId", stickyId).dialog({
+                    width: 200,
+                    height: 200,
+                    buttons: [
+                        {
+                            text: "OK",
+                            click: function() {
+                                $( this ).dialog( "close" );
+                                var localStickyId = $(this).data('stickyId');
+                                addOrUpdateSticky(localStickyId, $('#dialog-text-area').val());
+                            }
+                        },
+                        {
+                            text: "Cancel",
+                            click: function() {
+                                $( this ).dialog( "close" );
+                            }
+                        }
+                    ],
+
+
+                    open: function(event, ui)
+                    {   var localStickyId = $(this).data('stickyId');
+                        var stickyText = "";
+                        if (localStickyId) {
+                            stickyText = $("#" + localStickyId).text();
+                        }
+                        var textarea = $('<textarea class="sticky-text-dialog" id="dialog-text-area"></textarea>');
+
+                        $(this).html(textarea);
+                        $("#dialog-text-area").text(stickyText);
+
+                        $("#dialog-text-area").keypress(function (e) {
+                            var code = (e.keyCode ? e.keyCode : e.which);
+                            if (code == 13) {
+                                console.log("User hit enter")
+                                $("#dialog-modal").dialog( "close" );
+                                var localStickyId = $("#dialog-modal").data('stickyId');
+                                addOrUpdateSticky(localStickyId, $('#dialog-text-area').val());
+                                return true;
+                            }
+                        });
+
+                        if (localStickyId) {
+                            $('#dialog-text-area').select();
+                            $('#dialog-text-area').focus();
+                        } else {
+                            $('#dialog-text-area').focus();
+                        }
+                    }
+                });
+            }
+
+
+        });
+    </script>
 
 </head>
 <body style="background-color: #d9ccee">
@@ -56,15 +281,27 @@
 
 
                 <li class="navbar-right">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                    <a href="#"  role="button" aria-expanded="false" id="new-sticky-button">
                         <span class="glyphicon glyphicon-plus"></span>&nbsp;New Note</a>
 
                 </li>
             </ul>
         </div>
     </nav>
-    <div style="width: 100%; height: 600px; background-color: black;">
-
+    <div id="sticky-canvas" style="position:absolute; top: 100px; left: 0px; width:1310px;  height: 600px; background-color: black;" >
+        <div id="dialog-modal" title="Basic modal dialog" style="display: none;"></div>
+        <div class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightgreen;">
+            <div class="center-me sticky-canvas-quadrant-title">Glad</div>
+        </div>
+        <div class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightyellow;">
+            <div class="center-me sticky-canvas-quadrant-title">Sad</div>
+        </div>
+        <div class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightpink;">
+            <div class="center-me sticky-canvas-quadrant-title">Mad</div>
+        </div>
+        <div class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightblue;">
+            <div class="center-me sticky-canvas-quadrant-title">Try</div>
+        </div>
     </div>
 
     <% } %>

@@ -13,6 +13,7 @@
     "async": "^2.0.1",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "~1.0.0",
+    "collections": "^5.0.4",
     "cookie-parser": "~1.0.0",
     "crypto": "0.0.3",
     "ejs": "2.4.1",

@@ -10,6 +10,7 @@ var Strategy = require('passport-local').Strategy;
 var RetroBoardDb = require('./app/retroboarddb');
 var User = require('./app/models/user');
 var flash    = require('connect-flash');
+var BoardConnection = require('./app/models/boardConnection');
 
 
 var morgan = require('morgan');
@@ -119,7 +120,58 @@ app.use(function(req,res,next){
 
 
 require('./app/routes.js')(app, passport);
+var db = new RetroBoardDb();
+var io = require('socket.io').listen(
+    app.listen(port, function() {
+        console.log('Node app is running on port', port);
+    }));
 
-app.listen(port, function () {
-    console.log('Example app listening on port ' + port + '!');
+
+
+var boardConnections = [];
+
+io.sockets.on('connection', function (socket) {
+
+
+    console.log("connection, socket id: " + socket.id);
+
+
+    socket.on('user connected', function(data){
+        // User connected to board
+        console.log("data %j", data);
+        console.log("socket id: " + socket.id.toString());
+
+        var boardConnection = new BoardConnection(socket.id.toString(), data.board_id, data.user_id);
+        console.log(boardConnection.socketId + ", " + boardConnection.boardId + ", " + boardConnection.userId);
+        boardConnections.push(boardConnection);
+        console.log("printing connections");
+        for (var i =0 ; i < boardConnections.length; i++) {
+            console.log(i + ": " + boardConnections[i].socketId+ ", " + boardConnections[i].boardId + ", " + boardConnections[i].userId);
+        }
+
+
+    });
+
+    socket.on('disconnect', function() {
+        var deleteIndex = -1;
+        for (var i =0 ; i < boardConnections.length; i++) {
+            if (boardConnections[i].socketId == socket.id.toString()) {
+                deleteIndex = i;
+                break;
+            }
+        }
+
+        if (deleteIndex > -1) {
+            boardConnections.splice(deleteIndex, 1);
+        }
+
+        console.log("printing connections");
+        for (var i =0 ; i < boardConnections.length; i++) {
+            console.log(i + ": " + boardConnections[i].socketId+ ", " + boardConnections[i].boardId + ", " + boardConnections[i].userId);
+        }
+
+    });
+
 });
+
+

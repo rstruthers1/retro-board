@@ -4,7 +4,7 @@
     <% include ../partials/header.ejs %>
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/jquery.validate.min.js"></script>
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/additional-methods.min.js"></script>
-
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
 
     <link rel="stylesheet" type="text/css" href="/css/cmxformTemplate.css"/>
     <link rel="stylesheet" type="text/css" href="/css/cmxformmine.css"/>
@@ -138,15 +138,19 @@
 
 
         $(document).ready(function(){
-            $("#sticky-canvas").droppable(
-                    {
-                        drop: function(event, ui) {
-                            console.log("Sticky dropped :" + ui.draggable.attr('id'));
-                            //setStickyLayerToHighestOnCanvas(ui.draggable.attr('id'));
-                        }
-                    }
-            );
+            // Connect to our node/websockets server
+            var socket = io.connect(window.location.hostname);
 
+            socket.emit('user connected', { user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
+
+            $("#sticky-canvas").droppable(
+                {
+                    drop: function(event, ui) {
+                        console.log("Sticky dropped :" + ui.draggable.attr('id'));
+                        //setStickyLayerToHighestOnCanvas(ui.draggable.attr('id'));
+                    }
+                }
+            );
 
             function addSticky(message) {
                 var stickyCanvasWidth = $("#sticky-canvas").width();
@@ -274,6 +278,14 @@
     <nav class="navbar navbar-default navbar-static-top navbar-inverse" style="padding: 0px; margin: 0px; z-index: 10;">
         <div class="container">
 
+            <ul class="nav navbar-nav navbar-left">
+
+
+                <li class="navbar-left">
+                    <a href="#"  role="button" aria-expanded="false">Connected users:&nbsp;<span id="num_users_connected"></span></a>
+
+                </li>
+            </ul>
 
             <span class="navbar-brand active" style="color: white"><%= board.name%></span>
 

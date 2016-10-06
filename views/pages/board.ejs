@@ -140,8 +140,17 @@
         $(document).ready(function(){
             // Connect to our node/websockets server
             var socket = io.connect(window.location.hostname);
+            $("#message-center").val("");
 
-            socket.emit('user connected', { user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
+            socket.on('connect', function() {
+                socket.emit('user joined', { user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
+            });
+
+            socket.on('user joined', function(data) {
+                console.log("user joined");
+                $("#message-center").val($("#message-center").val() + data.message + "\n");
+            });
+
 
             $("#sticky-canvas").droppable(
                 {
@@ -279,11 +288,8 @@
         <div class="container">
 
             <ul class="nav navbar-nav navbar-left">
-
-
-                <li class="navbar-left">
+                <li class="nav navbar-nav navbar-left">
                     <a href="#"  role="button" aria-expanded="false">Connected users:&nbsp;<span id="num_users_connected"></span></a>
-
                 </li>
             </ul>
 
@@ -314,6 +320,11 @@
         <div class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightblue;">
             <div class="center-me sticky-canvas-quadrant-title">Try</div>
         </div>
+    </div>
+    <div>
+        <textarea id="message-center" rows="40" cols="80"  style="position:absolute; top: 700px; left: 0px; width:1310px; height:100px;">
+
+        </textarea>
     </div>
 
     <% } %>

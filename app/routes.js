@@ -445,6 +445,61 @@ module.exports = function (app, passport) {
         });
     });
 
+    // =====================================
+    // Add users to board
+    // =====================================
+
+    app.get('/add-users-to-board', isLoggedIn, function (req, res, next) {
+        db.hasBoardAdminPermission(req.user.id, req.query.boardId, function(err, hasPermission) {
+            if (err) {
+                res.render('pages/add-users-to-board', {
+                    board: null,
+                    message: "",
+                    error_message: err.toString()
+                });
+                return;
+            }
+            if (hasPermission) {
+                db.findBoardById(req.query.boardId, function (err, board) {
+                    var boardErrorMessage = "";
+                    if (err) {
+                        boardErrorMessage = err.toString();
+                    }
+                    res.render('pages/add-users-to-board', {
+                        board: board,
+                        message: "",
+                        error_message: boardErrorMessage
+                    });
+                });
+            } else {
+                res.render('pages/add-users-to-board', {
+                    board: null,
+                    message: "",
+                    error_message: "You do not have permission to add users to this board."
+                });
+                return;
+            }
+        });
+    });
+
+    app.get('/user-search', function(req, res, next) {
+        console.log("---- user-search");
+        console.log(req.body);
+        db.findByUsernameContains(req.query.q, function(err, users) {
+            if (err) {
+                res.send("{}");
+                return;
+            }
+            var data = new Object();
+            data.search_results = [];
+            for (var i = 0; i < users.length; i++) {
+                var user = users[i];
+                data.search_results.push({id: user.id, name: user.username});
+            }
+            res.send(data);
+        });
+    });
+
     // route middleware to make sure a user is logged in
     function isLoggedIn(req, res, next) {
         // if user is authenticated in the session, carry on

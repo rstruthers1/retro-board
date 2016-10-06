@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/header.ejs %>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/additional-methods.min.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.2/bootstrap3-typeahead.js"></script>
+
+
+    <link rel="stylesheet" type="text/css" href="/css/cmxformTemplate.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/cmxformmine.css"/>
+    <title>Easy Retro Board: Add Users</title>
+
+    <script>
+        $(document).ready(function() {
+            var $input = $('.typeahead');
+            $input.typeahead({
+                source: function (query, process) {
+                    return $.get('/user-search?q=' + query, function (data) {
+                        return process(data.search_results);
+                    });
+                }
+            });
+
+            /**
+            $input.typeahead(
+
+                    {source:[{id: "someId1", name: "Display name 1"},
+                {id: "someId2", name: "Display name 2"}],
+                autoSelect: true}
+                ); **/
+            $input.change(function() {
+                var current = $input.typeahead("getActive");
+                if (current) {
+                    // Some item from your model is active!
+                    if (current.name == $input.val()) {
+                        // This means the exact match is found. Use toLowerCase() if you want case insensitive match.
+                    } else {
+                        // This means it is only a partial match, you can either add a new item
+                        // or take the active if you don't want new items
+                    }
+                } else {
+                    // Nothing is active so it is a new value (or maybe empty value)
+                }
+            });
+        });
+    </script>
+
+
+</head>
+<body style="background-color: #d9ccee">
+<% include ../partials/nav.ejs %>
+<div class="container">
+    <div class="row" style="padding-top: 30px;">
+
+        <div class="col-md-6 col-sm-offset-2 col-md-offset-3" style="background-color: cornsilk; border-radius: 6px;">
+
+            <form class="cmxform form-inline form-horizontal" id="boardCreateForm" action="/add-user-to-board" method="post"
+                  style="padding-top: 30px">
+                <% if (error_message.length > 0) { %>
+                <div class="alert alert-danger"><%= error_message %></div>
+                <% } %>
+                <% if (message.length > 0) { %>
+                <div class="alert alert-success"><%= message %></div>
+                <% } %>
+                <% if (board) { %>
+                <fieldset>
+                    <legend>Add User To Board "<%= board.name %>"</legend>
+
+                    <p>
+                        <label for="name">Name</label>
+                        <input id="name" name="name" type="name" class="form-control input-sm" style="width: 300px;"
+                               value = "<%= board.name%>" disabled>
+                    </p>
+
+                    <p>
+                        <label for="user">User</label>
+                        <input id="user" name="user" type="text" class="form-control input-sm typeahead" style="width: 300px;"
+                               data-provide="typeahead" >
+                    </p>
+
+                    <hr style="background-color: #532F8C">
+                    <div class="row">
+
+                        <div class="col-xs-12 col-md-6"><input type="submit" value="Add User"
+                                                               class="btn btn-primary btn-block btn-lg"
+                                                               tabindex="7">
+                        </div>
+
+                    </div>
+
+
+
+                </fieldset>
+                <% } %>
+            </form>
+        </div>
+    </div>
+
+
+</div>
+
+</body>
+</html>

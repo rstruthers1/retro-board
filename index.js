@@ -10,7 +10,8 @@ var Strategy = require('passport-local').Strategy;
 var RetroBoardDb = require('./app/retroboarddb');
 var User = require('./app/models/user');
 var flash    = require('connect-flash');
-var BoardConnection = require('./app/models/boardConnection');
+var UserConnection = require('./app/models/userConnection');
+var Board = require('./app/models/board');
 
 
 var morgan = require('morgan');
@@ -126,50 +127,60 @@ var io = require('socket.io').listen(
         console.log('Node app is running on port', port);
     }));
 
+var boards = [];
 
-
-var boardConnections = [];
+function findBoardById(boardId) {
+  for (var i = 0; i < boards.length; i++) {
+      if (boardId == boards[i].id) {
+          return boards[i];
+      }
+  }
+  return null;
+};
 
 io.sockets.on('connection', function (socket) {
-
-
     console.log("connection, socket id: " + socket.id);
+    var boardId = null;
+    var boardUser = null;
 
-
-    socket.on('user connected', function(data){
+    socket.on('user joined', function(data) {
         // User connected to board
         console.log("data %j", data);
         console.log("socket id: " + socket.id.toString());
+        boardId = data.board_id;
+        socket.join(data.board_id);
+        db.findById(data.user_id, function(error, user) {
+            if (error) {
+                console.log(error);
+                io.sockets.in(data.board_id).emit('user joined', error.toString());
+            } else {
+                boardUser = user;
+                io.sockets.in(boardId).emit('user joined', { user_id: user.id, message: user.username + " has joined."});
+            }
+        });
 
-        var boardConnection = new BoardConnection(socket.id.toString(), data.board_id, data.user_id);
-        console.log(boardConnection.socketId + ", " + boardConnection.boardId + ", " + boardConnection.userId);
-        boardConnections.push(boardConnection);
-        console.log("printing connections");
-        for (var i =0 ; i < boardConnections.length; i++) {
-            console.log(i + ": " + boardConnections[i].socketId+ ", " + boardConnections[i].boardId + ", " + boardConnections[i].userId);
+
+
+        var board = findBoardById(boardId);
+        if (board == null) {
+            board = new Board();
+            board.id = boardId;
+            boards.push(board);
         }
 
+        var userConnection = new UserConnection(data.user_id, socket.id.toString());
+        board.addUserConnection(userConnection);
+        board.printUserConnections();
 
     });
 
     socket.on('disconnect', function() {
-        var deleteIndex = -1;
-        for (var i =0 ; i < boardConnections.length; i++) {
-            if (boardConnections[i].socketId == socket.id.toString()) {
-                deleteIndex = i;
-                break;
-            }
+        if (boardId) {
+            var board = findBoardById(boardId);
+            board.removeUserConnection(socket.id.toString());
+            board.printUserConnections();
+            io.sockets.in(boardId).emit('user joined', { user_id: boardUser.id, message: boardUser.username + " has left."});
         }
-
-        if (deleteIndex > -1) {
-            boardConnections.splice(deleteIndex, 1);
-        }
-
-        console.log("printing connections");
-        for (var i =0 ; i < boardConnections.length; i++) {
-            console.log(i + ": " + boardConnections[i].socketId+ ", " + boardConnections[i].boardId + ", " + boardConnections[i].userId);
-        }
-
     });
 
 });

@@ -57,6 +57,35 @@ RetroBoardDb.prototype.findByUsername = function(username, callback) {
     });
 };
 
+
+RetroBoardDb.prototype.findByUsernameStartingWith = function(username, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        connection.query('SELECT * FROM user WHERE username like ?', username + '%', function(error, results, fields) {
+            var users = createUsersFromDatabaseResults(results);
+            callback(error, users);
+            connection.release();
+        });
+    });
+};
+
+RetroBoardDb.prototype.findByUsernameContains = function(username, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        connection.query('SELECT * FROM user WHERE username like ?', '%' + username + '%', function(error, results, fields) {
+            var users = createUsersFromDatabaseResults(results);
+            callback(error, users);
+            connection.release();
+        });
+    });
+};
+
 RetroBoardDb.prototype.findByResetPasswordToken = function(resetPasswordToken, callback) {
     pool.getConnection(function(error, connection) {
         if (error) {
@@ -233,6 +262,21 @@ RetroBoardDb.prototype.hasPermissionToView = function(userId, boardId, callback)
     });
 };
 
+RetroBoardDb.prototype.hasBoardAdminPermission = function(userId, boardId, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        connection.query('SELECT * FROM board WHERE id = ? and owner_id = ?', [boardId, userId], function(error, results, fields) {
+            var board = createBoardFromDatabaseResults(results);
+            var hasPermission = (board != null);
+            callback(error, hasPermission);
+            connection.release();
+        });
+    });
+};
+
 function createUserFromDatabaseResults(results) {
     var user = null;
     if (results && results.length > 0) {
@@ -247,6 +291,25 @@ function createUserFromDatabaseResults(results) {
         user.resetPasswordExpires = results[0].reset_password_expires;
     }
     return user;
+}
+
+function createUsersFromDatabaseResults(results) {
+    var users = [];
+    if (results && results.length > 0) {
+        for (var i = 0; i < results.length; i++) {
+            var user = new User();
+            user.email = results[i].email;
+            user.password_hash = results[i].password_hash;
+            user.id = results[i].id;
+            user.username = results[i].username;
+            user.firstname = results[i].first_name;
+            user.lastname = results[i].last_name;
+            user.resetPasswordToken = results[i].reset_password_token;
+            user.resetPasswordExpires = results[i].reset_password_expires;
+            users.push(user);
+         }
+    }
+    return users;
 }
 
 function createBoardsFromDatabaseResults(results) {

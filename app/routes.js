@@ -482,19 +482,68 @@ module.exports = function (app, passport) {
         });
     });
 
+    app.post('/add-users-to-board', isLoggedIn, function (req, res, next) {
+        console.log("---- here!");
+        console.log("req.user.username: " + req.user.username);
+        db.hasBoardAdminPermission(req.user.id, req.body.boardId, function(err, hasPermission) {
+            if (err) {
+                res.render('pages/add-users-to-board', {
+                    board: null,
+                    message: "",
+                    error_message: err.toString()
+                });
+                return;
+            }
+            if (hasPermission) {
+                db.findBoardById(req.body.boardId, function (err, board) {
+                    var boardErrorMessage = "";
+                    if (err) {
+                        boardErrorMessage = err.toString();
+                        res.render('pages/add-users-to-board', {
+                            board: board,
+                            message: "",
+                            error_message: err
+                        });
+                        return;
+                    }
+                    res.render('pages/add-users-to-board', {
+                        board: board,
+                        message: "",
+                        error_message: "Not implemented."
+                    });
+                });
+            } else {
+                res.render('pages/add-users-to-board', {
+                    board: null,
+                    message: "",
+                    error_message: "You do not have permission to add users to this board."
+                });
+                return;
+            }
+        });
+    });
+
     app.get('/user-search', function(req, res, next) {
         console.log("---- user-search");
         console.log(req.body);
-        db.findByUsernameContains(req.query.q, function(err, users) {
+        db.findByFirstNameOrLastNameStartsWith(req.query.q, 50, function(err, users) {
+            var data = new Object();
+
             if (err) {
-                res.send("{}");
+                data.error = err.toString();
+                res.send(data);
                 return;
             }
-            var data = new Object();
+
             data.search_results = [];
             for (var i = 0; i < users.length; i++) {
                 var user = users[i];
-                data.search_results.push({id: user.id, name: user.username});
+                var searchUser = {};
+                searchUser.id = user.id;
+                searchUser.firstname = user.firstname;
+                searchUser.lastname = user.lastname;
+                searchUser.username = user.username;
+                data.search_results.push(searchUser);
             }
             res.send(data);
         });

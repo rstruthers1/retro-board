@@ -8,45 +8,119 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.2/bootstrap3-typeahead.js"></script>
 
+    <script src="/js/jquery.ba-throttle-debounce.js"></script>
+    <script src="/js/selectableScroll.js"></script>
+
 
     <link rel="stylesheet" type="text/css" href="/css/cmxformTemplate.css"/>
     <link rel="stylesheet" type="text/css" href="/css/cmxformmine.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/jquery-ui-ext.css"/>
     <title>Easy Retro Board: Add Users</title>
 
     <script>
         $(document).ready(function() {
-            var $input = $('.typeahead');
-            $input.typeahead({
-                source: function (query, process) {
-                    return $.get('/user-search?q=' + query, function (data) {
-                        return process(data.search_results);
-                    });
-                }
+            $( "#selectable" ).selectableScroll({
+                filter: 'li'
             });
+            function doSearch(q) {
+                $.ajax({
+                    url: "user-search?q=" + q
+                }).then(function (data) {
+                    console.log(JSON.stringify(data));
 
-            /**
-            $input.typeahead(
-
-                    {source:[{id: "someId1", name: "Display name 1"},
-                {id: "someId2", name: "Display name 2"}],
-                autoSelect: true}
-                ); **/
-            $input.change(function() {
-                var current = $input.typeahead("getActive");
-                if (current) {
-                    // Some item from your model is active!
-                    if (current.name == $input.val()) {
-                        // This means the exact match is found. Use toLowerCase() if you want case insensitive match.
-                    } else {
-                        // This means it is only a partial match, you can either add a new item
-                        // or take the active if you don't want new items
+                    var searchResultsHtml = "";
+                    if (data && data.search_results) {
+                        console.log("rendering search results")
+                        for (var i = 0; i < data.search_results.length; i++) {
+                            var user = data.search_results[i];
+                            searchResultsHtml +=
+                        '<li class="ui-widget-content" id=' + user.id +'>' + user.firstname + '&nbsp;' + user.lastname + '</li>'
+                        }
                     }
-                } else {
-                    // Nothing is active so it is a new value (or maybe empty value)
-                }
-            });
+                    $('#selectable').html(searchResultsHtml);
+                });
+            }
+
+            doSearch($('#user').val());
+
+            // This function is debounced, and the new, debounced, function is bound to
+            // the event. Note that in jQuery 1.4+ a reference to either the original or
+            // debounced function can be passed to .unbind to unbind the function.
+            function handleSearchKeyup() {
+                var val = $(this).val();
+                console.log(val);
+                doSearch(val);
+            };
+
+            $('#user').keyup($.debounce( 250, handleSearchKeyup));
         });
     </script>
+
+    <style>
+        .lfs_item {
+            padding-top: 0.625rem;
+            padding-bottom: 0.625rem;
+            padding-left: 0.625rem;
+            padding-right: 0.625rem;
+            border-width: 1px;
+            border-style: solid;
+            border-color: rgb(232, 232, 232) transparent transparent;
+            border-image: initial;
+            border-top: 1px solid rgb(232, 232, 232);
+
+            width:100%;
+            background-color: white; height:40px; display: block;
+        }
+
+        .search_box_container {
+            display: block;
+            font-weight: 400;
+            font-size: 1.125rem;
+            line-height: 1.5rem;
+            display: block;
+
+        }
+
+        .selected_user {
+            border-radius: 3px;
+            height: 30px;
+            font-size: 12px;
+            margin-left: 20px;
+            background-color: #0000FF;
+            color: white;
+            font-weight: bold;
+            padding-right: 5px;
+            padding-left: 5px;
+            padding-top: 8px;
+            width: auto;
+            display: inline-flex;
+            vertical-align: middle;
+        }
+
+        #feedback { font-size: 1.4em; }
+        #selectable .ui-selecting { background: #FECA40; }
+        #selectable .ui-selected { background: #F39814; color: white; }
+        #selectable {
+            list-style-type: none;
+            margin: 0; padding: 0; width: 100%;
+        }
+        #selectable li {
+            margin: 3px;
+            padding: 5px;
+            font-size: 16px;
+            height: 40px;
+            border-radius: 3px;
+        }
+        #search_results {
+            border-color: rgb(200, 200, 200);
+            border-width: 1px;
+            padding: 0px;
+            border-radius: 5px;
+            border-style: solid;
+        }
+        #search_results ol{height:240px; width:100%;}
+        #search_results ol{overflow:hidden; overflow-y:scroll;}
+    </style>
 
 
 </head>
@@ -54,10 +128,9 @@
 <% include ../partials/nav.ejs %>
 <div class="container">
     <div class="row" style="padding-top: 30px;">
-
         <div class="col-md-6 col-sm-offset-2 col-md-offset-3" style="background-color: cornsilk; border-radius: 6px;">
 
-            <form class="cmxform form-inline form-horizontal" id="boardCreateForm" action="/add-user-to-board" method="post"
+            <form class="cmxform form-inline form-horizontal" id="boardCreateForm" action="/add-users-to-board" method="post"
                   style="padding-top: 30px">
                 <% if (error_message.length > 0) { %>
                 <div class="alert alert-danger"><%= error_message %></div>
@@ -66,30 +139,51 @@
                 <div class="alert alert-success"><%= message %></div>
                 <% } %>
                 <% if (board) { %>
+                <input type="hidden" name="boardId" value="<%=board.id%>" >
                 <fieldset>
-                    <legend>Add User To Board "<%= board.name %>"</legend>
+                    <legend>Add Users To Board: <%= board.name %></legend>
 
-                    <p>
-                        <label for="name">Name</label>
-                        <input id="name" name="name" type="name" class="form-control input-sm" style="width: 300px;"
-                               value = "<%= board.name%>" disabled>
-                    </p>
-
-                    <p>
-                        <label for="user">User</label>
-                        <input id="user" name="user" type="text" class="form-control input-sm typeahead" style="width: 300px;"
-                               data-provide="typeahead" >
-                    </p>
-
-                    <hr style="background-color: #532F8C">
                     <div class="row">
+                        <p>
 
-                        <div class="col-xs-12 col-md-6"><input type="submit" value="Add User"
-                                                               class="btn btn-primary btn-block btn-lg"
-                                                               tabindex="7">
+<div style="margin-bottom:20px; display: block;">
+
+
+
+          <!--  <span id="selected_user" class="selected_user">User McUser</span> -->
+            <span style="font-style: italic; font-size: 14px; margin-left: 30px;">Use the mouse to select elements, individually or in a group.</span>
+
+
+            </div>
+
+            <div id="search_results" style=" height: 250px;   margin-left:30px; margin-right:30px; ">
+
+                <ol id="selectable">
+                    </ol>
+            </div>
+                        <div class="row">
+                        <div class="col-xs-12 col-md-6" style="margin-bottom: 20px; margin-top: 20px;">
+                            <input id="user" name="user" type="text" class="form-control input-sm"  autocomplete="off"
+                                   style="margin-left: 30px; float: left" placeholder="Search">
+                        </div>
+                    </div>
+
+
+                        <div class="row">
+
+                            <div class="col-xs-12 col-md-6"><input type="submit" value="Add Selected Users"
+                                                                   class="btn btn-primary btn-block btn-lg" style="margin-left: 30px;"
+                                                                   tabindex="7">
+                            </div>
+
                         </div>
 
-                    </div>
+
+
+        </p>
+        </div>
+
+
 
 
 

@@ -86,6 +86,23 @@ RetroBoardDb.prototype.findByUsernameContains = function(username, callback) {
     });
 };
 
+RetroBoardDb.prototype.findByFirstNameOrLastNameStartsWith = function(query, limit, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        connection.query('SELECT * FROM user WHERE first_name like ? OR last_name like ? ' +
+            'order by first_name, last_name limit ?',
+            [query + '%', query + '%', limit],
+            function(error, results, fields) {
+            var users = createUsersFromDatabaseResults(results);
+            callback(error, users);
+            connection.release();
+        });
+    });
+};
+
 RetroBoardDb.prototype.findByResetPasswordToken = function(resetPasswordToken, callback) {
     pool.getConnection(function(error, connection) {
         if (error) {

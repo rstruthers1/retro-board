@@ -86,15 +86,21 @@ RetroBoardDb.prototype.findByUsernameContains = function(username, callback) {
     });
 };
 
-RetroBoardDb.prototype.findByFirstNameOrLastNameStartsWith = function(query, limit, callback) {
+RetroBoardDb.prototype.findByFirstNameOrLastNameStartsWithNotAddedToBoard = function(boardId, query, limit, callback) {
     pool.getConnection(function(error, connection) {
         if (error) {
             callback(error, null);
             return;
         }
-        connection.query('SELECT * FROM user WHERE first_name like ? OR last_name like ? ' +
-            'order by first_name, last_name limit ?',
-            [query + '%', query + '%', limit],
+        connection.query(
+            'SELECT u.id, u.email, u.username, u.password_hash, ' +
+            'u.first_name, u.last_name, u.reset_password_token, u.reset_password_expires ' +
+            'FROM user u ' +
+                'left join ' +
+                'board_user bu on bu.user_id = u.id and bu.board_id = ? ' +
+                'where bu.user_id IS NULL and (u.first_name like ? OR u.last_name like ?)' +
+                'order by u.first_name, u.last_name limit ?',
+            [boardId, query + '%', query + '%', limit],
             function(error, results, fields) {
             var users = createUsersFromDatabaseResults(results);
             callback(error, users);
@@ -250,6 +256,29 @@ RetroBoardDb.prototype.findBoardsByOwnerId = function(ownerId, callback) {
     });
 };
 
+RetroBoardDb.prototype.findBoardsByUserId = function(userId, callback) {
+    console.log("userId: " + userId);
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            console.log(error.toString());
+            callback(error, null);
+            return;
+        }
+        connection.query('SELECT b.id, b.name, b.owner_id, b.create_date_time ' +
+            'FROM board b ' +
+            'LEFT JOIN board_user bu on b.id = bu.board_id ' +
+            'WHERE bu.user_id = ?',
+            [userId], function(error, results, fields) {
+                console.log("query callback");
+                console.log("error: " + error);
+                console.log(JSON.stringify(results));
+                var boards = createBoardsFromDatabaseResults(results);
+                callback(error, boards);
+                connection.release();
+        });
+    });
+};
+
 RetroBoardDb.prototype.findBoardById = function(id, callback) {
     pool.getConnection(function(error, connection) {
         if (error) {
@@ -270,9 +299,9 @@ RetroBoardDb.prototype.hasPermissionToView = function(userId, boardId, callback)
             callback(error, null);
             return;
         }
-        connection.query('SELECT * FROM board WHERE id = ? and owner_id = ?', [boardId, userId], function(error, results, fields) {
-            var board = createBoardFromDatabaseResults(results);
-            var hasPermission = (board != null);
+        connection.query('SELECT * FROM board_user WHERE board_id = ? and user_id = ?', [boardId, userId], function(error, results, fields) {
+
+            var hasPermission = results.length;
             callback(error, hasPermission);
             connection.release();
         });
@@ -289,6 +318,34 @@ RetroBoardDb.prototype.hasBoardAdminPermission = function(userId, boardId, callb
             var board = createBoardFromDatabaseResults(results);
             var hasPermission = (board != null);
             callback(error, hasPermission);
+            connection.release();
+        });
+    });
+};
+
+RetroBoardDb.prototype.addUserToBoard = function(userId, boardId, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        var boardUserValues = {user_id: userId, board_id: boardId};
+        connection.query('INSERT INTO board_user SET ?', boardUserValues, function(error, results, fields) {
+            callback(error);
+            connection.release();
+        });
+    });
+};
+
+RetroBoardDb.prototype.addUsersToBoard = function(boardAndUserIds, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        console.log("boardAndUserIds: " + JSON.stringify(boardAndUserIds));
+        connection.query('INSERT INTO board_user (board_id, user_id) VALUES ?', [boardAndUserIds], function(error, results, fields) {
+            callback(error);
             connection.release();
         });
     });

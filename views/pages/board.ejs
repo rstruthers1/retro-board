@@ -288,13 +288,12 @@
         <div class="container">
 
             <ul class="nav navbar-nav navbar-left">
+                <% if (board_admin) {%>
                 <li class="nav navbar-nav navbar-left">
-                    <a href="#"  role="button" aria-expanded="false">Connected users:&nbsp;<span id="num_users_connected"></span></a>
-                </li>
-                <li>
                     <a href="add-users-to-board?boardId=<%= board.id%>"  role="button" aria-expanded="false" id="add-user">
                         <span class="glyphicon glyphicon-plus"></span>&nbsp;Add Users</a>
                 </li>
+                <% } %>
             </ul>
 
             <span class="navbar-brand active" style="color: white"><%= board.name%></span>

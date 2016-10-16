@@ -16,15 +16,27 @@
     <link rel="stylesheet" type="text/css" href="/css/cmxformmine.css"/>
     <link rel="stylesheet" type="text/css" href="/css/jquery-ui-ext.css"/>
     <title>Easy Retro Board: Add Users</title>
-
+    <% if (board) { %>
     <script>
         $(document).ready(function () {
             $("#selectable").selectableScroll({
-                filter: 'li'
+                filter: 'li',
+                selected: function( event, ui ) {
+                    $('#success_message').hide();
+                    $("#add-users-submit").prop("disabled", false);
+                },
+                unselected: function( event, ui ) {
+                    if ($("li.ui-selected").length) {
+                        $("#add-users-submit").prop("disabled", false);
+                    } else {
+                        $("#add-users-submit").prop("disabled", true);
+                    }
+                }
             });
             function doSearch(q) {
+                $('#success_message').hide();
                 $.ajax({
-                    url: "user-search?q=" + q
+                    url: "user-search-not-in-board?boardId=" + <%= board.id %> + "&q=" + q
                 }).then(function (data) {
                     console.log(JSON.stringify(data));
 
@@ -53,8 +65,56 @@
             };
 
             $('#user').keyup($.debounce(250, handleSearchKeyup));
+
+            $("#addUsersForm").submit(function(){
+                return false;
+            });
+
+            $("#add-users-submit").prop("disabled", true);
+
+            $("#add-users-submit").click(function() {
+
+                var boardId = parseInt("<%= board.id %>");
+                var data = new Object();
+                data.board_users = [];
+                $("li.ui-selected").each(function(i) {
+                    data.board_users.push([boardId, parseInt(this.id)]);
+                });
+                console.log(JSON.stringify(data.board_users));
+                $('#success_message').hide();
+                $("#add-users-submit").prop("disabled", true);
+                $.ajax
+                ({
+                    type: "POST",
+                    url: '/add-users-to-board',
+                    contentType : 'application/json',
+                    async: true,
+                    data: JSON.stringify(data),
+                    error: function(xhr, status, error) {
+                        if ($("li.ui-selected").length) {
+                            $("#add-users-submit").prop("disabled", false);
+                        } else {
+                            $("#add-users-submit").prop("disabled", true);
+                        }
+                        alert(JSON.stringify(error));
+
+                    },
+                    success: function (data) {
+                        console.log(JSON.stringify(data));
+                        if ($("li.ui-selected").length) {
+                            $("#add-users-submit").prop("disabled", false);
+                        } else {
+                            $("#add-users-submit").prop("disabled", true);
+                        }
+                        doSearch($('#user').val());
+                        $('#success_message').show();
+                        $('#success_message').html(data.add_message);
+                    }
+                })
+            });
         });
     </script>
+    <% } %>
 
     <style>
         .lfs_item {
@@ -154,7 +214,7 @@
     <div class="row" style="padding-top: 30px;">
         <div class="col-md-6 col-sm-offset-2 col-md-offset-3" style="background-color: cornsilk; border-radius: 6px;">
 
-            <form class="cmxform form-inline form-horizontal" id="boardCreateForm" action="/add-users-to-board"
+            <form class="cmxform form-inline form-horizontal" id="addUsersForm" action="/add-users-to-board"
                   method="post"
                   style="padding-top: 30px">
                 <% if (error_message.length > 0) { %>
@@ -164,6 +224,7 @@
                 <div class="alert alert-success"><%= message %></div>
                 <% } %>
                 <% if (board) { %>
+                <div id="success_message" class="alert alert-success" style="display: none;"></div>
                 <input type="hidden" name="boardId" value="<%= board.id %>">
                 <fieldset>
                     <legend>Add Users To Board: <%= board.name %></legend>
@@ -194,14 +255,23 @@
 
                         <div class="row">
 
-                            <div class="col-xs-12 col-md-6">
+                            <span class="col-xs-12 col-md-6">
                                 <input type="submit" value="Add Selected Users"
+                                       id ="add-users-submit"
                                        class="btn btn-primary btn-block btn-lg"
-                                       style="margin-left: 30px;"
+                                       style="margin-left: 30px; float: left;"
                                        tabindex="7">
-                            </div>
+
+
+
+                            </span>
+                            <span class="col-xs-12 col-md-6">
+                            <a style="float: right; margin-right: 30px; font-size:16px; vertical-align: middle; margin-top: 10px;"
+                               href="board?boardId=<%= board.id %>">Back to board</a>
+                                </span>
 
                         </div>
+
 
 
                         </p>

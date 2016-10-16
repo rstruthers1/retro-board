@@ -24,7 +24,10 @@ module.exports = function (app, passport) {
     app.get('/', function (req, res) {
         var boards = null;
         if (req.isAuthenticated()) {
-            db.findBoardsByOwnerId(req.user.id, function(err, boards) {
+            db.findBoardsByUserId(req.user.id, function(err, boards) {
+                if (err) {
+                    console.log(err.toString);
+                }
                 res.render('pages/index', {
                     boards: boards
                 });
@@ -393,9 +396,17 @@ module.exports = function (app, passport) {
                 res.redirect("/board-create");
                 return;
             }
-            req.flash("createMessage", 'Board "' + board.name + '" created successfully!');
-            req.flash("boardCreatedId", board.id);
-            res.redirect('/board-created');
+
+            db.addUserToBoard(req.user.id, board.id, function(error) {
+                if (error) {
+                    req.flash("error_createMessage", error.toString());
+                    res.redirect("/board-create");
+                    return;
+                }
+                req.flash("createMessage", 'Board "' + board.name + '" created successfully!');
+                req.flash("boardCreatedId", board.id);
+                res.redirect('/board-created');
+            });
 
         });
     });
@@ -419,12 +430,12 @@ module.exports = function (app, passport) {
             if (err) {
                 res.render('pages/board', {
                     board: null,
-                    error_message: err.toString()
+                    error_message: err.toString(),
+                    board_admin: false
                 });
                 return;
             }
             if (hasPermission) {
-
                 db.findBoardById(req.query.boardId, function (err, board) {
                     var boardErrorMessage = "";
                     if (err) {
@@ -432,13 +443,15 @@ module.exports = function (app, passport) {
                     }
                     res.render('pages/board', {
                         board: board,
-                        error_message: boardErrorMessage
+                        error_message: boardErrorMessage,
+                        board_admin: req.user.id == board.ownerId
                     });
                 });
             } else {
                 res.render('pages/board', {
                     board: null,
-                    error_message: "You do not have permission to view this board."
+                    error_message: "You do not have permission to view this board.",
+                    board_admin: false
                 });
                 return;
             }
@@ -482,51 +495,10 @@ module.exports = function (app, passport) {
         });
     });
 
-    app.post('/add-users-to-board', isLoggedIn, function (req, res, next) {
-        console.log("---- here!");
-        console.log("req.user.username: " + req.user.username);
-        db.hasBoardAdminPermission(req.user.id, req.body.boardId, function(err, hasPermission) {
-            if (err) {
-                res.render('pages/add-users-to-board', {
-                    board: null,
-                    message: "",
-                    error_message: err.toString()
-                });
-                return;
-            }
-            if (hasPermission) {
-                db.findBoardById(req.body.boardId, function (err, board) {
-                    var boardErrorMessage = "";
-                    if (err) {
-                        boardErrorMessage = err.toString();
-                        res.render('pages/add-users-to-board', {
-                            board: board,
-                            message: "",
-                            error_message: err
-                        });
-                        return;
-                    }
-                    res.render('pages/add-users-to-board', {
-                        board: board,
-                        message: "",
-                        error_message: "Not implemented."
-                    });
-                });
-            } else {
-                res.render('pages/add-users-to-board', {
-                    board: null,
-                    message: "",
-                    error_message: "You do not have permission to add users to this board."
-                });
-                return;
-            }
-        });
-    });
-
-    app.get('/user-search', function(req, res, next) {
+    app.get('/user-search-not-in-board', function(req, res, next) {
         console.log("---- user-search");
         console.log(req.body);
-        db.findByFirstNameOrLastNameStartsWith(req.query.q, 50, function(err, users) {
+        db.findByFirstNameOrLastNameStartsWithNotAddedToBoard(req.query.boardId, req.query.q, 50, function(err, users) {
             var data = new Object();
 
             if (err) {
@@ -547,6 +519,21 @@ module.exports = function (app, passport) {
             }
             res.send(data);
         });
+    });
+
+    app.post('/add-users-to-board', function(req, res, next) {
+        console.log(JSON.stringify(req.body));
+        db.addUsersToBoard(req.body.board_users, function (error) {
+            if (error) {
+                console.log(error.toString());
+                res.statusCode = 500;
+                res.send({error_message: error.toString()});
+                return;
+            }
+            res.statusCode = 200;
+            res.send({add_message: "Successfully added users to board"});
+        });
+
     });
 
     // route middleware to make sure a user is logged in

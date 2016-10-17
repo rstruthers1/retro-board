@@ -38,6 +38,15 @@ Board.prototype.printUserConnections = function() {
     }
 }
 
+Board.prototype.getUserConnections = function() {
+    var uc = [];
+    for (var i = 0; i < this.userConnections.length; i++) {
+        var userConnection = this.userConnections[i];
+        uc.push(userConnection);
+    }
+    return uc;
+}
+
 
 
 module.exports = Board;

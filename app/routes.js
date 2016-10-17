@@ -533,7 +533,31 @@ module.exports = function (app, passport) {
             res.statusCode = 200;
             res.send({add_message: "Successfully added users to board"});
         });
+    });
 
+    app.get('/board-users', function(req, res, next) {
+        console.log("req.query.boardId: " + req.query.boardId);
+        db.findBoardUsers(req.query.boardId, 500, function (error, users) {
+            if (error) {
+                console.log(error.toString());
+                res.statusCode = 500;
+                res.send({error_message: error.toString()});
+                return;
+            }
+            res.statusCode = 200;
+            var data = {};
+            data.board_users = [];
+            for (var i = 0; i < users.length; i++) {
+                var user = users[i];
+                var boardUser = {};
+                boardUser.id = user.id;
+                boardUser.firstname = user.firstname;
+                boardUser.lastname = user.lastname;
+                boardUser.username = user.username;
+                data.board_users.push(boardUser);
+            }
+            res.send(data);
+        });
     });
 
     // route middleware to make sure a user is logged in

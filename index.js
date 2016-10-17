@@ -138,6 +138,51 @@ function findBoardById(boardId) {
   return null;
 };
 
+function idFoundInUserConnections(userId, userConnections) {
+    for (var i = 0; i < userConnections.length; i++) {
+        if (userId == userConnections[i].userId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function createUserWithStatus(user) {
+    var userWithStatus = {};
+    userWithStatus.id = user.id;
+    userWithStatus.firstname = user.firstname;
+    userWithStatus.lastname = user.lastname;
+    userWithStatus.username = user.username;
+    userWithStatus.connected = false;
+    return userWithStatus;
+}
+
+function createUsersWithConnectionStatusList(users, userConnections) {
+    var connectedUsers = [];
+    var disconnectedUsers = [];
+    for (var i = 0; i < users.length; i++) {
+        var user = users[i];
+        var userWithStatus = createUserWithStatus(user);
+        if (idFoundInUserConnections(user.id, userConnections)) {
+            userWithStatus.connected = true;
+            connectedUsers.push(userWithStatus);
+        } else {
+            userWithStatus.connected = false;
+            disconnectedUsers.push(userWithStatus);
+        }
+    }
+    var usersWithStatus = [];
+    for (var i = 0; i < connectedUsers.length; i++) {
+        usersWithStatus.push(connectedUsers[i]);
+    }
+
+    for (var i = 0; i < disconnectedUsers.length; i++) {
+        usersWithStatus.push(disconnectedUsers[i]);
+    }
+
+    return usersWithStatus;
+}
+
 io.sockets.on('connection', function (socket) {
     console.log("connection, socket id: " + socket.id);
     var boardId = null;
@@ -149,17 +194,6 @@ io.sockets.on('connection', function (socket) {
         console.log("socket id: " + socket.id.toString());
         boardId = data.board_id;
         socket.join(data.board_id);
-        db.findById(data.user_id, function(error, user) {
-            if (error) {
-                console.log(error);
-                io.sockets.in(data.board_id).emit('user joined', error.toString());
-            } else {
-                boardUser = user;
-                io.sockets.in(boardId).emit('user joined', { user_id: user.id, message: user.username + " has joined."});
-            }
-        });
-
-
 
         var board = findBoardById(boardId);
         if (board == null) {
@@ -172,6 +206,19 @@ io.sockets.on('connection', function (socket) {
         board.addUserConnection(userConnection);
         board.printUserConnections();
 
+        var userConnections = board.getUserConnections();
+
+        db.findBoardUsers(boardId, 500, function(error, users) {
+            if (error) {
+                console.log(error.toString());
+            } else {
+                var data = {};
+                data.usersWithConnectionStatus = createUsersWithConnectionStatusList(users, userConnections);
+                console.log(JSON.stringify(data));
+                io.sockets.in(boardId).emit('user joined', data);
+            }
+        });
+
     });
 
     socket.on('disconnect', function() {
@@ -179,7 +226,18 @@ io.sockets.on('connection', function (socket) {
             var board = findBoardById(boardId);
             board.removeUserConnection(socket.id.toString());
             board.printUserConnections();
-            io.sockets.in(boardId).emit('user joined', { user_id: boardUser.id, message: boardUser.username + " has left."});
+
+            var userConnections = board.getUserConnections();
+            db.findBoardUsers(boardId, 500, function(error, users) {
+                if (error) {
+                    console.log(error.toString());
+                } else {
+                    var data = {};
+                    data.usersWithConnectionStatus = createUsersWithConnectionStatusList(users, userConnections);
+                    console.log(JSON.stringify(data));
+                    io.sockets.in(boardId).emit('user left', data);
+                }
+            });
         }
     });
 

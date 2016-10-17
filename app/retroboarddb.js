@@ -351,6 +351,31 @@ RetroBoardDb.prototype.addUsersToBoard = function(boardAndUserIds, callback) {
     });
 };
 
+RetroBoardDb.prototype.findBoardUsers = function(boardId, limit, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        connection.query(
+            'SELECT u.id, u.email, u.username, u.password_hash, ' +
+            'u.first_name, u.last_name, u.reset_password_token, u.reset_password_expires ' +
+            'FROM user u ' +
+            'left join ' +
+            'board_user bu on bu.user_id = u.id ' +
+            'WHERE bu.board_id = ? ' +
+            'order by u.first_name, u.last_name limit ?',
+            [boardId, limit],
+            function(error, results, fields) {
+                var users = createUsersFromDatabaseResults(results);
+                callback(error, users);
+                connection.release();
+            });
+    });
+};
+
+
+
 function createUserFromDatabaseResults(results) {
     var user = null;
     if (results && results.length > 0) {

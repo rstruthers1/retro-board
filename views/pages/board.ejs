@@ -115,6 +115,11 @@
             left: 50%;
             position: absolute;
         }
+
+        #board-members-inner-panel ul {
+            overflow: hidden;
+            overflow-y: scroll;
+        }
     </style>
     <script>
         function generateUUID() {
@@ -138,6 +143,54 @@
 
 
         $(document).ready(function(){
+            function fetchBoardMembers() {
+                $.ajax({
+                    url: "/board-users?boardId=<%= board.id %>"
+                }).then(function (data) {
+                    console.log(JSON.stringify(data));
+                    var boardUsersHtml = "";
+                    if (data && data.board_users) {
+                        for (var i = 0; i < data.board_users.length; i++) {
+                            var user = data.board_users[i];
+                            boardUsersHtml +=
+                                    '<li class="list-group-item" id=' + user.id + '>' + user.firstname + '&nbsp;' + user.lastname + '<span style="float:right"><img src="/images/disconnected.png"></span></li>';
+                        }
+                        $("#board-members").html(boardUsersHtml);
+                    }
+                });
+            };
+
+            //fetchBoardMembers();
+
+            function idFoundInUserConnections(id, userConnections) {
+                for (var i = 0; i < userConnections.length; i++) {
+                    if (id === userConnections[i].userId) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            function renderMemberList(usersWithConnectionStatus) {
+                var boardUsersHtml = "";
+                for (var i = 0; i < usersWithConnectionStatus.length; i++) {
+                    var user = usersWithConnectionStatus[i];
+                    var imageSource = "";
+                    if (user.connected) {
+                        imageSource = "/images/connected.png";
+                    } else {
+                        imageSource = "/images/disconnected.png";
+                    }
+                    boardUsersHtml +=
+                            '<li class="list-group-item" id=' + user.id + '>' +
+                                user.firstname + '&nbsp;' + user.lastname +
+                                '<span style="float:right">' +
+                                    '<img src="' + imageSource + '">' +
+                                '</span></li>';
+                }
+                $("#board-members").html(boardUsersHtml);
+            }
+
             // Connect to our node/websockets server
             var socket = io.connect(window.location.hostname);
             $("#message-center").val("");
@@ -147,10 +200,17 @@
             });
 
             socket.on('user joined', function(data) {
-                console.log("user joined");
-                $("#message-center").val($("#message-center").val() + data.message + "\n");
+                console.log("user joined: " + JSON.stringify(data));
+                renderMemberList(data.usersWithConnectionStatus);
+                //console.log(JSON.stringify(data.userConnections));
+                //updateUserConnections(data.userConnections);
             });
 
+            socket.on('user left', function(data) {
+                console.log("user left: " + JSON.stringify(data));
+                renderMemberList(data.usersWithConnectionStatus);
+                //updateUserConnections(data.userConnections);
+            });
 
             $("#sticky-canvas").droppable(
                 {
@@ -308,6 +368,7 @@
             </ul>
         </div>
     </nav>
+    <div class="row">
     <div id="sticky-canvas" style="position:absolute; top: 100px; left: 0px; width:1310px;  height: 600px; background-color: black;" >
         <div id="dialog-modal" title="Basic modal dialog" style="display: none;"></div>
         <div class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightgreen;">
@@ -323,10 +384,21 @@
             <div class="center-me sticky-canvas-quadrant-title">Try</div>
         </div>
     </div>
+        <div id="board-members-panel" style="position: absolute; top: 100px; left: 1310px; height: 600px; width: 300px; background-color: white; border: 1px solid grey; ">
+                <span style="background-color: lightcyan; padding-top: 5px; display: block; text-align: center; float: none; font-weight: bold; font-size: 16px;">Members</span>
+                <hr style="	border-top: 1px double lightgray; margin-top: 0px; margin-bottom: 0px;">
+            <div id="board-members-inner-panel" style="height: 560px;">
+            <ul class="list-group" id="board-members" style="height: 560px;">
+                <!--
+                <li class="list-group-item">Rachel Struthers</li>
+                <li class="list-group-item">Fred Smith</li>
+                -->
+            </ul>
+            </div>
+        </div>
+        </div>
     <div>
-        <textarea id="message-center" rows="40" cols="80"  style="position:absolute; top: 700px; left: 0px; width:1310px; height:100px;">
 
-        </textarea>
     </div>
 
     <% } %>

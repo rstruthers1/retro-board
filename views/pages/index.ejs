@@ -3,59 +3,70 @@
 <head>
     <title>Easy Retro Board: Home</title>
     <% include ../partials/header.ejs %>
+    <style>
+        .btn-dark {
+            border-radius: 5px;
+            color: #fff;
+            /*background-color: rgba(0,0,100,0.4);*/
+            background-color: rgba(0, 48, 117, 0.6);
+        }
+
+        body {
+            background-color: ivory;
+            background-image: url("/images/58-usersthink-stock-image.jpg");
+            background-size:     cover;                      /* <------ */
+            background-repeat:   no-repeat;
+            background-position: center center;              /* optional, center the image */
+        }
+    </style>
 </head>
-<body style="background-color: #d9ccee">
+<body>
 <% include ../partials/nav.ejs %>
 <div class="container">
-    <div class="jumbotron text-center">
-        <div class="container">
-            <h1>Welcome to Easy Retro Board!</h1>
-            <p>Easily Do Your Retros Online</p>
-        </div>
-    </div>
 
-    <div class="row">
-        <div class="col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3">
-            <% if (login) {%>
-                <div class="row" style="padding-bottom:30px;">
-                    <div class="col-md-6 col-sm-offset-2 col-md-offset-3" >
-                        <a href="/board-create" class="btn btn-primary btn-block btn-lg">Create a Board</a>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 col-md-offset-4" >
-                        <h2>Your Boards</h2>
-                        <% if (boards) { %>
-                            <ul class="list-group" style="border: solid; border-color: grey; border-width: 1px; padding: 2px;">
-                            <% for (var i = 0; i < boards.length; i++) {%>
-                                <li class="list-group-item"><a href="board?boardId=<%= boards[i].id%>"><%= boards[i].name %></a></li>
-                            <%} %>
-                            </ul>
-                        <%} else {%>
-                            <span>You currently have no boards.</span>
-                        <% } %>
-                    </div>
-
+        <div class="col-lg-12 text-center" style="margin-top: 50px;">
+            <h1 style="display: block;">Welcome to Easy Retro Board!</h1>
+            <p class="lead">Easily Do Your Retros Online</p>
+            <% if (!login) {%>
+            <div style="margin-top: 50px;">
+            <a href="/login" class="btn btn-dark btn-lg" style="margin:20px;">Log In</a>
+            <a href="/signup" class="btn btn-dark btn-lg" style="margin:20px;">Sign Up</a>
                 </div>
             <% } else {%>
 
-
-
-                <div class="row">
-
-                    <div class="col-xs-12 col-md-6"><a href="/login" class="btn btn-primary btn-block btn-lg">Log In</a>
-                    </div>
-
-                    <div class="col-xs-12 col-md-6"><a href="/signup" class="btn btn-default btn-block btn-lg">Sign Up</a>
-                    </div>
+            <div class="row" style="padding-bottom:30px;">
+                <div class="col-md-6 col-sm-offset-2 col-md-offset-3" >
+                    <a href="/board-create" class="btn btn-dark btn-lg">Create a Board</a>
                 </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 col-md-offset-4" style="background-color: cornsilk; border-radius: 5px; margin-top: 40px; border-color: lightgray; border-style: solid; border-width: 1px;">
+
+                    <h2 style="padding-top: 5px; display: block; text-align: center; float: none; font-weight: bold; font-size: 24px;">Your Boards</h2>
+                    <% if (boards) { %>
+                    <ul class="list-group" >
+                        <% for (var i = 0; i < boards.length; i++) {%>
+                        <li class="list-group-item" style="padding: 2px;">
+                            <a href="board?boardId=<%= boards[i].id%>" style="width:100%; margin: 0px;" class="btn btn-dark btn-lg"><%= boards[i].name %></a></li>
+                        <%} %>
+                    </ul>
+                    <%} else {%>
+                    <span>You currently have no boards.</span>
+                    <% } %>
+                </div>
+
+            </div>
+
+
 
 
 
             <% }%>
-
         </div>
-    </div>
+
+
+
+
 </div>
 
 </body>

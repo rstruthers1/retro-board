@@ -25,8 +25,13 @@ form.cmxform label.error, label.error {
 }
 
 body {
-    background-color: ivory;
-
+    background-color: #d9ccee;
+    /*background-image: url("/images/58-usersthink-stock-image.jpg");*/
+    /*background-size:     cover;                      !* <------ *!*/
+    /*background-repeat:   no-repeat;*/
+    /*background-position: center center;              !* optional, center the image *!*/
 }
+
+
 
 

@@ -124,7 +124,7 @@
     <script>
         function generateUUID() {
             var d = new Date().getTime();
-            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var uuid = 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = (d + Math.random()*16)%16 | 0;
                 d = Math.floor(d/16);
                 return (c=='x' ? r : (r&0x3|0x8)).toString(16);
@@ -147,7 +147,6 @@
                 $.ajax({
                     url: "/board-users?boardId=<%= board.id %>"
                 }).then(function (data) {
-                    console.log(JSON.stringify(data));
                     var boardUsersHtml = "";
                     if (data && data.board_users) {
                         for (var i = 0; i < data.board_users.length; i++) {
@@ -200,35 +199,57 @@
             });
 
             socket.on('user joined', function(data) {
-                console.log("user joined: " + JSON.stringify(data));
+                console.log("user joined");
                 renderMemberList(data.usersWithConnectionStatus);
-                //console.log(JSON.stringify(data.userConnections));
-                //updateUserConnections(data.userConnections);
+            });
+
+            socket.on('sticky added', function(data) {
+                console.log("sticky added: " + JSON.stringify(data));
+                if (data.user_id != "<%= user.id%>") {
+                    addSticky(data.sticky_message, true, data.sticky_id);
+                }
+            });
+
+            socket.on('sticky dropped', function(data) {
+                console.log("sticky dropped: " + JSON.stringify(data));
+                if (data.user_id != "<%= user.id%>") {
+                    moveSticky(data.sticky_id, data.top, data.left);
+                }
             });
 
             socket.on('user left', function(data) {
-                console.log("user left: " + JSON.stringify(data));
+                console.log("user left");
                 renderMemberList(data.usersWithConnectionStatus);
-                //updateUserConnections(data.userConnections);
             });
 
             $("#sticky-canvas").droppable(
                 {
                     drop: function(event, ui) {
-                        console.log("Sticky dropped :" + ui.draggable.attr('id'));
-                        //setStickyLayerToHighestOnCanvas(ui.draggable.attr('id'));
+                        console.log("Sticky dropped :" + ui.draggable.attr('id') + ", (" + ui.position.left + ", " + ui.position.top + ")");
+                        socket.emit('sticky dropped', { sticky_id: ui.draggable.attr('id'), left: ui.position.left,
+                            top: ui.position.top,
+                            user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
                     }
                 }
             );
 
-            function addSticky(message) {
+            function moveSticky(stickyId, top, left) {
+                $("#" + stickyId).css({"position": stickyId, "top": top , "left": left});
+            }
+
+            function addSticky(message, fromSocketEvent, stickyId) {
                 var stickyCanvasWidth = $("#sticky-canvas").width();
                 var stickyCanvasHeight = $("#sticky-canvas").height();
                 var x = stickyCanvasWidth /2 - 50;
                 var y = stickyCanvasHeight /2 - 50;
                 var posStyle = "position: absolute; top: " + y + "px; left: " + x + "px;";
                 console.log("posStyle: " + posStyle);
-                var currentId = generateUUID();
+                var currentId = "";
+                if (!stickyId) {
+                    currentId = generateUUID();
+                } else {
+                    currentId = stickyId;
+                }
                 var sticky = new Sticky(message, x, y, currentId);
                 stickies.push(sticky);
                 console.log(stickies);
@@ -246,6 +267,14 @@
                 });
                 $("#" + currentId).css("z-index", 0);
                 setStickyLayerToHighestOnCanvas(currentId);
+                if (!fromSocketEvent) {
+                    socket.emit('sticky added', {
+                        sticky_id: currentId,
+                        sticky_message: message,
+                        user_id: "<%= user.id %>",
+                        board_id: "<%= board.id %>"
+                    });
+                }
                 return currentId;
             }
 

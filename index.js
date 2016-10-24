@@ -190,7 +190,7 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('user joined', function(data) {
         // User connected to board
-        console.log("data %j", data);
+        //console.log("data %j", data);
         console.log("socket id: " + socket.id.toString());
         boardId = data.board_id;
         socket.join(data.board_id);
@@ -204,7 +204,6 @@ io.sockets.on('connection', function (socket) {
 
         var userConnection = new UserConnection(data.user_id, socket.id.toString());
         board.addUserConnection(userConnection);
-        board.printUserConnections();
 
         var userConnections = board.getUserConnections();
 
@@ -214,11 +213,23 @@ io.sockets.on('connection', function (socket) {
             } else {
                 var data = {};
                 data.usersWithConnectionStatus = createUsersWithConnectionStatusList(users, userConnections);
-                console.log(JSON.stringify(data));
+                //console.log(JSON.stringify(data));
                 io.sockets.in(boardId).emit('user joined', data);
             }
         });
 
+    });
+
+    socket.on('sticky added', function(data) {
+        console.log("data %j", data);
+        console.log("socket id: " + socket.id.toString());
+        io.sockets.in(boardId).emit('sticky added', data);
+    });
+
+    socket.on('sticky dropped', function(data) {
+        console.log("sticky dropped: data: %j", data);
+        console.log("socket id: " + socket.id.toString());
+        io.sockets.in(boardId).emit('sticky dropped', data);
     });
 
     socket.on('disconnect', function() {

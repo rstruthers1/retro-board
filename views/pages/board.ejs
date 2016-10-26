@@ -203,18 +203,42 @@
                 renderMemberList(data.usersWithConnectionStatus);
             });
 
+            socket.on('initial notes', function(data){
+               console.log("initial notes: " + JSON.stringify(data));
+                if (data) {
+                    for (var i = 0; i < data.length; i++) {
+                        var note = data[i];
+                        if ($("#" + note.stickyId).length == 0) {
+                            addSticky(note.message, true,  note.stickyId, note.top, note.left);
+                        } else {
+                            moveSticky( note.stickyId, note.top, note.left);
+                        }
+                    }
+                }
+            });
+
+            /**
             socket.on('sticky added', function(data) {
                 console.log("sticky added: " + JSON.stringify(data));
                 if (data.user_id != "<%= user.id%>") {
                     addSticky(data.sticky_message, true, data.sticky_id);
                 }
-            });
+            });**/
 
             socket.on('sticky dropped', function(data) {
                 console.log("sticky dropped: " + JSON.stringify(data));
-                if (data.user_id != "<%= user.id%>") {
+                if ($("#" + data.sticky_id).length == 0) {
+                    addSticky(data.message, true,  data.sticky_id, data.top, data.left);
+                } else {
                     moveSticky(data.sticky_id, data.top, data.left);
                 }
+
+            });
+
+
+            socket.on('sticky message updated', function(data) {
+                console.log("sticky message updated: "+ JSON.stringify(data));
+                $("#" + data.sticky_id).text(data.message);
             });
 
             socket.on('user left', function(data) {
@@ -225,8 +249,9 @@
             $("#sticky-canvas").droppable(
                 {
                     drop: function(event, ui) {
-                        console.log("Sticky dropped :" + ui.draggable.attr('id') + ", (" + ui.position.left + ", " + ui.position.top + ")");
-                        socket.emit('sticky dropped', { sticky_id: ui.draggable.attr('id'), left: ui.position.left,
+                        var stickyId = ui.draggable.attr('id');
+                        console.log("Sticky dropped :" + stickyId + ", (" + ui.position.left + ", " + ui.position.top + ")");
+                        socket.emit('sticky dropped', { sticky_id: stickyId, message: $("#" + stickyId).text(), left: ui.position.left,
                             top: ui.position.top,
                             user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
                     }
@@ -237,11 +262,17 @@
                 $("#" + stickyId).css({"position": stickyId, "top": top , "left": left});
             }
 
-            function addSticky(message, fromSocketEvent, stickyId) {
+            function addSticky(message, fromSocketEvent, stickyId, top, left) {
                 var stickyCanvasWidth = $("#sticky-canvas").width();
                 var stickyCanvasHeight = $("#sticky-canvas").height();
                 var x = stickyCanvasWidth /2 - 50;
                 var y = stickyCanvasHeight /2 - 50;
+                if (top) {
+                    y = top;
+                }
+                if (left) {
+                    x = left;
+                }
                 var posStyle = "position: absolute; top: " + y + "px; left: " + x + "px;";
                 console.log("posStyle: " + posStyle);
                 var currentId = "";
@@ -272,7 +303,9 @@
                         sticky_id: currentId,
                         sticky_message: message,
                         user_id: "<%= user.id %>",
-                        board_id: "<%= board.id %>"
+                        board_id: "<%= board.id %>",
+                        top: y,
+                        left: x
                     });
                 }
                 return currentId;
@@ -300,6 +333,8 @@
                 } else {
                     console.log("stickyId = " + stickyId);
                     $("#" + stickyId).text(message);
+                    socket.emit('sticky message updated', { sticky_id: stickyId, message: message,
+                        user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
                 }
             }
 

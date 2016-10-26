@@ -8,6 +8,7 @@ var moment = require('moment');
 
 var User = require('./models/user');
 var Board = require('./models/board');
+var Note = require('./models/note');
 
 
 function RetroBoardDb() {
@@ -374,6 +375,79 @@ RetroBoardDb.prototype.findBoardUsers = function(boardId, limit, callback) {
     });
 };
 
+RetroBoardDb.prototype.addNoteToBoard = function(userId, boardId, message, top, left, stickyId, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        var now = moment();
+        var dateTimeString = now.format("YYYY-MM-DD HH:mm:ss");
+        var noteValues = {creator_id: userId, board_id: boardId, message: message, top_pos: top, left_pos: left,
+            sticky_id: stickyId, create_date_time: dateTimeString};
+        connection.query('INSERT INTO note SET ?', noteValues, function(error, results, fields) {
+            callback(error);
+            connection.release();
+        });
+    });
+};
+
+RetroBoardDb.prototype.findBoardNotes = function(boardId, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        connection.query(
+            'SELECT n.id, n.creator_id, n.create_date_time, n.board_id, ' +
+            'n.message, n.top_pos, n.left_pos, n.sticky_id ' +
+            'FROM note n ' +
+            'left join ' +
+            'board b on n.board_id = b.id ' +
+            'WHERE b.id = ? ',
+            [boardId],
+            function(error, results, fields) {
+                var notes = createNotesFromDatabaseResults(results);
+                callback(error, notes);
+                connection.release();
+            });
+    });
+};
+
+RetroBoardDb.prototype.updateNotePosition = function(top, left, stickyId, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+
+        var updateString = "UPDATE note SET top_pos = " + top +
+            ", left_pos = " + left + " where sticky_id = '" + stickyId + "'";
+        console.log("updateString: " + updateString);
+        connection.query(updateString, function(error, results, fields) {
+            callback(error);
+            connection.release();
+        });
+    });
+};
+
+RetroBoardDb.prototype.updateNoteMessage = function(message, stickyId, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+
+        var updateString = "UPDATE note SET message = '" + message + "' "
+            + " where sticky_id = '" + stickyId + "'";
+        console.log("updateString: " + updateString);
+        connection.query(updateString, function(error, results, fields) {
+            callback(error);
+            connection.release();
+        });
+    });
+}
+
 
 
 function createUserFromDatabaseResults(results) {
@@ -410,6 +484,19 @@ function createUsersFromDatabaseResults(results) {
     }
     return users;
 }
+
+function createNotesFromDatabaseResults(results) {
+    var notes = [];
+
+    if (results && results.length > 0) {
+        for (var i = 0; i < results.length; i++) {
+            var note = new Note(results[i].creator_id, results[i].create_date_time, results[i].board_id, results[i].message,
+            results[i].top_pos, results[i].left_pos, results[i].sticky_id, results[i].id);
+            notes.push(note);
+        }
+    }
+    return notes;
+};
 
 function createBoardsFromDatabaseResults(results) {
     var boards = null;

@@ -188,6 +188,8 @@ io.sockets.on('connection', function (socket) {
     var boardId = null;
     var boardUser = null;
 
+
+
     socket.on('user joined', function(data) {
         // User connected to board
         //console.log("data %j", data);
@@ -207,15 +209,26 @@ io.sockets.on('connection', function (socket) {
 
         var userConnections = board.getUserConnections();
 
-        db.findBoardUsers(boardId, 500, function(error, users) {
+        db.findBoardNotes(boardId, function(error, notes) {
+
             if (error) {
                 console.log(error.toString());
             } else {
-                var data = {};
-                data.usersWithConnectionStatus = createUsersWithConnectionStatusList(users, userConnections);
-                //console.log(JSON.stringify(data));
-                io.sockets.in(boardId).emit('user joined', data);
+
+               console.log("notes: " + JSON.stringify(notes));
+                socket.emit("initial notes", notes);
+                db.findBoardUsers(boardId, 500, function (error, users) {
+                    if (error) {
+                        console.log(error.toString());
+                    } else {
+                        var data = {};
+                        data.usersWithConnectionStatus = createUsersWithConnectionStatusList(users, userConnections);
+                        //console.log(JSON.stringify(data));
+                        io.sockets.in(boardId).emit('user joined', data);
+                    }
+                });
             }
+
         });
 
     });
@@ -223,13 +236,38 @@ io.sockets.on('connection', function (socket) {
     socket.on('sticky added', function(data) {
         console.log("data %j", data);
         console.log("socket id: " + socket.id.toString());
-        io.sockets.in(boardId).emit('sticky added', data);
+       // io.sockets.in(boardId).emit('sticky added', data);
+
+        db.addNoteToBoard(data.user_id, data.board_id, data.sticky_message, data.top, data.left, data.sticky_id, function(error) {
+            if (error) {
+                console.log(error);
+            }
+        });
     });
 
     socket.on('sticky dropped', function(data) {
         console.log("sticky dropped: data: %j", data);
         console.log("socket id: " + socket.id.toString());
-        io.sockets.in(boardId).emit('sticky dropped', data);
+
+        db.updateNotePosition(data.top, data.left, data.sticky_id, function(error) {
+            if (error) {
+                console.log(error);
+            }
+            io.sockets.in(boardId).emit('sticky dropped', data);
+        });
+
+    });
+
+    socket.on('sticky message updated', function(data) {
+        console.log("sticky message updated: data: %j", data);
+        console.log("socket id: " + socket.id.toString());
+        db.updateNoteMessage(data.message, data.sticky_id, function(error) {
+            if (error) {
+                console.log(error);
+            }
+            io.sockets.in(boardId).emit('sticky message updated', data);
+        });
+
     });
 
     socket.on('disconnect', function() {

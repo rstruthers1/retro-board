@@ -146,7 +146,7 @@
 
             $( "div[id^='sticky-section-']" ).click(function(e) {
                 console.log("e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
-                alert("e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
+               // alert("e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
             });
 
 
@@ -323,7 +323,7 @@
                 setStickyLayerToHighestOnCanvas(currentId);
                 $("#" + currentId ).click(function(e) {
                     console.log("sticky clicked: e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
-                    alert("sticky clicked: e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
+                   // alert("sticky clicked: e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
                 });
                 if (!fromSocketEvent) {
                     socket.emit('sticky added', {

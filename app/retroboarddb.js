@@ -448,6 +448,23 @@ RetroBoardDb.prototype.updateNoteMessage = function(message, stickyId, callback)
     });
 }
 
+RetroBoardDb.prototype.deleteNote = function(stickyId, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+
+        var deleteString = "delete from note "
+            + " where sticky_id = ?";
+        console.log("deleteString: " + deleteString);
+        connection.query(deleteString, [stickyId], function(error, results, fields) {
+            callback(error);
+            connection.release();
+        });
+    });
+}
+
 
 
 function createUserFromDatabaseResults(results) {

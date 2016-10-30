@@ -249,6 +249,11 @@
                 $("#" + data.sticky_id).text(data.message);
             });
 
+            socket.on('sticky deleted', function(data) {
+                console.log("sticky deleted: "+ JSON.stringify(data));
+                deleteSticky(data.sticky_id, true);
+            });
+
             socket.on('user left', function(data) {
                 console.log("user left");
                 renderMemberList(data.usersWithConnectionStatus);
@@ -268,6 +273,15 @@
 
             function moveSticky(stickyId, top, left) {
                 $("#" + stickyId).css({"position": stickyId, "top": top , "left": left});
+            }
+
+            function deleteSticky(stickyId, fromSocketEvent) {
+                if ($("#" + stickyId).length != 0) {
+                    $("#" + stickyId).remove();
+                    if (!fromSocketEvent) {
+                        socket.emit("sticky deleted", {sticky_id: stickyId, user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
+                    }
+                }
             }
 
             function addSticky(message, fromSocketEvent, stickyId, top, left) {
@@ -372,7 +386,17 @@
                             click: function() {
                                 $( this ).dialog( "close" );
                             }
+                        },
+                        {
+                            text: "Delete",
+                            click: function() {
+
+                                $( this ).dialog( "close" );
+                                var localStickyId = $(this).data('stickyId');
+                                deleteSticky(localStickyId);
+                            }
                         }
+
                     ],
 
 

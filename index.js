@@ -245,6 +245,19 @@ io.sockets.on('connection', function (socket) {
         });
     });
 
+    socket.on('sticky deleted', function(data) {
+        console.log("data %j", data);
+        console.log("socket id: " + socket.id.toString());
+
+
+        db.deleteNote(data.sticky_id, function(error) {
+            if (error) {
+                console.log(error);
+            }
+            io.sockets.in(boardId).emit('sticky deleted', data);
+        });
+    });
+
     socket.on('sticky dropped', function(data) {
         console.log("sticky dropped: data: %j", data);
         console.log("socket id: " + socket.id.toString());

@@ -143,6 +143,14 @@
 
 
         $(document).ready(function(){
+
+            $( "div[id^='sticky-section-']" ).click(function(e) {
+                console.log("e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
+            });
+
+
+
+
             function fetchBoardMembers() {
                 $.ajax({
                     url: "/board-users?boardId=<%= board.id %>"
@@ -298,6 +306,9 @@
                 });
                 $("#" + currentId).css("z-index", 0);
                 setStickyLayerToHighestOnCanvas(currentId);
+                $("#" + currentId ).click(function(e) {
+                    console.log("sticky clicked: e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
+                });
                 if (!fromSocketEvent) {
                     socket.emit('sticky added', {
                         sticky_id: currentId,
@@ -435,16 +446,16 @@
     <div class="row">
     <div id="sticky-canvas" style="position:absolute; top: 100px; left: 0px; width:1310px;  height: 600px; background-color: black;" >
         <div id="dialog-modal" title="Basic modal dialog" style="display: none;"></div>
-        <div class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightgreen;">
+        <div id="sticky-section-glad" class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightgreen;">
             <div class="center-me sticky-canvas-quadrant-title">Glad</div>
         </div>
-        <div class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightyellow;">
+        <div id="sticky-section-sad" class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightyellow;">
             <div class="center-me sticky-canvas-quadrant-title">Sad</div>
         </div>
-        <div class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightpink;">
+        <div id="sticky-section-mad" class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightpink;">
             <div class="center-me sticky-canvas-quadrant-title">Mad</div>
         </div>
-        <div class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightblue;">
+        <div id="sticky-section-try" class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightblue;">
             <div class="center-me sticky-canvas-quadrant-title">Try</div>
         </div>
     </div>

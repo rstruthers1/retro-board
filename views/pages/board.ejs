@@ -71,7 +71,7 @@
             width: 100%;
             padding: 0px;
             border: none;
-            height: 100%;
+            height: 80%;
             margin: -10px;
         }
 
@@ -410,8 +410,8 @@
             function showDialog(stickyId)
             {
                 $("#dialog-modal").data("stickyId", stickyId).dialog({
-                    width: 200,
-                    height: 200,
+                    width: 250,
+                    height: 250,
                     buttons: [
                         {
                             text: "OK",
@@ -446,7 +446,11 @@
                         if (localStickyId) {
                             stickyText = $("#" + localStickyId).text();
                         }
-                        var textarea = $('<textarea class="sticky-text-dialog" id="dialog-text-area"></textarea>');
+                        var textarea = $('<textarea class="sticky-text-dialog" id="dialog-text-area"></textarea>' +
+                                '<div id="dlg-change-up-votes"><span id="dlg-current-up-votes">+1</span>&nbsp;&nbsp;' +
+                                '<button type="button" class="btn btn-primary">Add a vote</button>' +
+                                '</div>');
+
 
                         $(this).html(textarea);
                         $("#dialog-text-area").text(stickyText);

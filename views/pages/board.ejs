@@ -278,7 +278,7 @@
 
             socket.on('sticky message updated', function(data) {
                 console.log("sticky message updated: "+ JSON.stringify(data));
-                $("#" + data.sticky_id).text(data.message);
+                $("#" + data.sticky_id + "message").text(data.message);
             });
 
             socket.on('sticky deleted', function(data) {
@@ -296,7 +296,7 @@
                     drop: function(event, ui) {
                         var stickyId = ui.draggable.attr('id');
                         console.log("Sticky dropped :" + stickyId + ", (" + ui.position.left + ", " + ui.position.top + ")");
-                        socket.emit('sticky dropped', { sticky_id: stickyId, message: $("#" + stickyId).text(), left: ui.position.left,
+                        socket.emit('sticky dropped', { sticky_id: stickyId, message: $("#" + stickyId + "-message").text(), left: ui.position.left,
                             top: ui.position.top,
                             user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
                     }
@@ -338,8 +338,10 @@
                 var sticky = new Sticky(message, x, y, currentId);
                 stickies.push(sticky);
                 console.log(stickies);
-                $("#sticky-canvas").append('<div class="sticky ui-widget-content sticky-active" id="' + currentId + '" style="' + posStyle + '"></div>');
-                $("#" + currentId).text(message);
+                $("#sticky-canvas").append('<div class="sticky ui-widget-content sticky-active" id="' + currentId + '" style="' + posStyle + '">' +
+                                '<div id="' + currentId + '-message" style="height:80%;"></div>' +
+                        '<span id="current-up-votes">+1</span></div>');
+                $("#" + currentId + "-message").text(message);
                 $("#" + currentId ).draggable(
                         {containment: $("#sticky-canvas")}
                 );
@@ -397,7 +399,7 @@
                     addSticky(message);
                 } else {
                     console.log("stickyId = " + stickyId);
-                    $("#" + stickyId).text(message);
+                    $("#" + stickyId + "-message").text(message);
                     socket.emit('sticky message updated', { sticky_id: stickyId, message: message,
                         user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
                 }
@@ -444,7 +446,7 @@
                     {   var localStickyId = $(this).data('stickyId');
                         var stickyText = "";
                         if (localStickyId) {
-                            stickyText = $("#" + localStickyId).text();
+                            stickyText = $("#" + localStickyId + "-message").text();
                         }
                         var textarea = $('<textarea class="sticky-text-dialog" id="dialog-text-area"></textarea>' +
                                 '<div id="dlg-change-up-votes"><span id="dlg-current-up-votes">+1</span>&nbsp;&nbsp;' +

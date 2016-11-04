@@ -319,6 +319,12 @@
                     console.log("double click happened");
                     showDialog($(this).attr('id'));
                 });
+
+                $("#" + currentId).on('doubleTap', function(e){
+                    console.log("double click happened");
+                    showDialog($(this).attr('id'));
+                });
+
                 $("#" + currentId).css("z-index", 0);
                 setStickyLayerToHighestOnCanvas(currentId);
                 $("#" + currentId ).click(function(e) {

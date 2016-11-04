@@ -136,7 +136,7 @@
 
         // If the touch interaction did not move, it should trigger a click
         // Also if the touch lasted less than 300ms count as click
-        if (!_touchMoved || _end - _start < 300) {
+        if (!_touchMoved || _end - _start < 1000) {
 
             // Simulate the click event
             simulateMouseEvent(event, 'click');

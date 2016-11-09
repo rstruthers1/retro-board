@@ -11,18 +11,46 @@
     <title>Easy Retro Board: Your Board</title>
     <style>
         .sticky {
+              background-color: yellow;
+
+              color: #333;
+              width: 100px;
+              height: 100px;
+              margin: 0 auto;
+              padding: 0px;
+              font-family: Arial;
+              font-size: 10px;
+              font-weight: bold;
+             /*overflow:auto;*/
+              box-shadow: 0 2px 2px 1px rgba(0,0,0,0.3);
+          }
+
+
+        .sticky-message-area {
             background-color: yellow;
 
             color: #333;
-            width: 100px;
-            height: 100px;
+
             margin: 0 auto;
-            padding: 10px;
             font-family: Arial;
-            font-size: 10px;
+            font-size: 12px;
             font-weight: bold;
-            overflow:auto;
-            box-shadow: 0 2px 2px 1px rgba(0,0,0,0.3);
+
+            border-style: none;
+            border-color: Transparent;
+            overflow: auto;
+
+            resize: none;
+            outline: none;
+            width: 100%;
+            padding-right: 0px;
+            padding-top: 2px;
+            padding-left: 2px;
+            padding-bottom: 5px;
+            border: none;
+            height: 85%;
+            margin: 0px;
+
         }
 
         .ui-dialog {
@@ -338,9 +366,20 @@
                 var sticky = new Sticky(message, x, y, currentId);
                 stickies.push(sticky);
                 console.log(stickies);
+
+                /**
                 $("#sticky-canvas").append('<div class="sticky ui-widget-content sticky-active" id="' + currentId + '" style="' + posStyle + '">' +
-                                '<div id="' + currentId + '-message" style="height:80%;"></div>' +
-                        '<span id="current-up-votes">+1</span></div>');
+                                '<div id="' + currentId + '-message" style="height:80%; class="sticky-message-area"></div>' +
+                                '<div>' +
+                        '<span id="current-up-votes">+1</span>' +
+                                '</div>' +
+                        '</div>');
+                 **/
+                $("#sticky-canvas").append('<div class="sticky ui-widget-content sticky-active" id="' + currentId + '" style="' + posStyle + '">' +
+                        '<div class="sticky-message-area" id="' + currentId + '-message"></div>' +
+                        '<div style="padding:2px; "><span id="' + currentId + '-current-up-votes">+1</span>&nbsp;&nbsp;' +
+                        '</div>' +
+                        '</div>');
                 $("#" + currentId + "-message").text(message);
                 $("#" + currentId ).draggable(
                         {containment: $("#sticky-canvas")}

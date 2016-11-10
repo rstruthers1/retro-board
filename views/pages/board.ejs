@@ -74,7 +74,7 @@
             color: #333;
 
             margin: 0 auto;
-            padding: 10px;
+            padding: 0px;
 
 
         }
@@ -99,7 +99,7 @@
             width: 100%;
             padding: 0px;
             border: none;
-            height: 70%;
+            height: 90%;
             margin: 0px;
         }
 
@@ -367,17 +367,9 @@
                 stickies.push(sticky);
                 console.log(stickies);
 
-                /**
-                $("#sticky-canvas").append('<div class="sticky ui-widget-content sticky-active" id="' + currentId + '" style="' + posStyle + '">' +
-                                '<div id="' + currentId + '-message" style="height:80%; class="sticky-message-area"></div>' +
-                                '<div>' +
-                        '<span id="current-up-votes">+1</span>' +
-                                '</div>' +
-                        '</div>');
-                 **/
                 $("#sticky-canvas").append('<div class="sticky ui-widget-content sticky-active" id="' + currentId + '" style="' + posStyle + '">' +
                         '<div class="sticky-message-area" id="' + currentId + '-message"></div>' +
-                        '<div style="padding:2px; "><span id="' + currentId + '-current-up-votes">+1</span>&nbsp;&nbsp;' +
+                        '<div style="padding:2px; "><span id="' + currentId + '-current-up-votes">+0</span>&nbsp;&nbsp;' +
                         '</div>' +
                         '</div>');
                 $("#" + currentId + "-message").text(message);
@@ -452,7 +444,7 @@
             {
                 $("#dialog-modal").data("stickyId", stickyId).dialog({
                     width: 250,
-                    height: 250,
+                    height: 300,
                     buttons: [
                         {
                             text: "OK",
@@ -488,8 +480,8 @@
                             stickyText = $("#" + localStickyId + "-message").text();
                         }
                         var textarea = $('<textarea class="sticky-text-dialog" id="dialog-text-area"></textarea>' +
-                                '<div id="dlg-change-up-votes"><span id="dlg-current-up-votes">+1</span>&nbsp;&nbsp;' +
-                                '<button type="button" class="btn btn-primary">Add a vote</button>' +
+                                '<div id="dlg-change-up-votes" style="padding:2px; display: table-row; vertical-align: bottom; height: 1px;"><span id="dlg-current-up-votes">+0</span>&nbsp;&nbsp;' +
+                                '<button type="button" class="btn btn-xs btn-primary" id="vote=button">Add a vote</button>' +
                                 '</div>');
 
 
@@ -508,7 +500,7 @@
                         });
 
                         if (localStickyId) {
-                            $('#dialog-text-area').select();
+//                            $('#dialog-text-area').select();
                             $('#dialog-text-area').focus();
                         } else {
                             $('#dialog-text-area').focus();
@@ -556,7 +548,7 @@
     </nav>
     <div class="row">
     <div id="sticky-canvas" style="position:absolute; top: 100px; left: 0px; width:1310px;  height: 600px; background-color: black;" >
-        <div id="dialog-modal" title="Basic modal dialog" style="display: none;"></div>
+        <div id="dialog-modal" title="Basic modal dialog" style="display: none; padding:2px; margin:0px; display: table;"></div>
         <div id="sticky-section-glad" class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightgreen;">
             <div class="center-me sticky-canvas-quadrant-title">Glad</div>
         </div>

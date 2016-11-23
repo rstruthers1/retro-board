@@ -12,6 +12,7 @@ function Note(creatorId, createDateTime, boardId, message, top, left, stickyId, 
     this.left = left;
     this.stickyId = stickyId;
     this.id = id;
+    this.userVotes = null;
 }
 
 module.exports = Note;

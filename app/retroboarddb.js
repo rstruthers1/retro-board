@@ -400,14 +400,15 @@ RetroBoardDb.prototype.findBoardNotes = function(boardId, callback) {
         }
         connection.query(
             'SELECT n.id, n.creator_id, n.create_date_time, n.board_id, ' +
-            'n.message, n.top_pos, n.left_pos, n.sticky_id ' +
+            'n.message, n.top_pos, n.left_pos, n.sticky_id, unv.user_id  ' +
             'FROM note n ' +
             'left join ' +
             'board b on n.board_id = b.id ' +
+            'left join user_note_vote unv on n.id = unv.note_id ' +
             'WHERE b.id = ? ',
             [boardId],
             function(error, results, fields) {
-                var notes = createNotesFromDatabaseResults(results);
+                var notes = createNotesWithVotesFromDatabaseResults(results);
                 callback(error, notes);
                 connection.release();
             });
@@ -443,6 +444,60 @@ RetroBoardDb.prototype.updateNoteMessage = function(message, stickyId, callback)
         console.log("updateString: " + updateString);
         connection.query(updateString, function(error, results, fields) {
             callback(error);
+            connection.release();
+        });
+    });
+}
+
+RetroBoardDb.prototype.insertUserNoteVote = function(userId, stickyId, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+        var selectQuery = "SELECT id FROM note WHERE sticky_id = ?";
+
+        connection.query(selectQuery, [stickyId], function(error, results, fields) {
+            if (error) {
+                callback(error);
+                return;
+            }
+            if (!results || results.length < 1) {
+                callback("Unable to find sticky note with id: " + stickyId);
+                return;
+            }
+            console.log("note results: %j", results);
+            var noteId = results[0].id;
+            console.log("note id: " + noteId);
+            var userNoteVoteValues = {user_id: userId, note_id: noteId, sticky_id: stickyId};
+            var insertQuery = "INSERT INTO user_note_vote SET ?";
+            connection.query(insertQuery, userNoteVoteValues, function(error, results, fields) {
+                if (error) {
+                    callback(error);
+                    return;
+                }
+                callback(null);
+                connection.release();
+            });
+
+        });
+    });
+}
+
+RetroBoardDb.prototype.getUserNoteVotes = function(stickyId, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+
+        var selectQuery = "SELECT * FROM user_note_vote WHERE sticky_id = ?";
+        connection.query(selectQuery, [stickyId], function(error, results, fields) {
+            if (error) {
+                callback(error, null);
+                return;
+            }
+            callback(null, results);
             connection.release();
         });
     });
@@ -509,6 +564,43 @@ function createNotesFromDatabaseResults(results) {
         for (var i = 0; i < results.length; i++) {
             var note = new Note(results[i].creator_id, results[i].create_date_time, results[i].board_id, results[i].message,
             results[i].top_pos, results[i].left_pos, results[i].sticky_id, results[i].id);
+            notes.push(note);
+        }
+    }
+    return notes;
+};
+
+function createNotesWithVotesFromDatabaseResults(results) {
+    var notes = [];
+
+    if (results && results.length > 0) {
+        for (var i = 0; i < results.length; i++) {
+            var foundNote = false;
+            for (var j = 0; j < notes.length; j++) {
+                if (results[i].sticky_id === notes[j].stickyId) {
+                    if (results[i].user_id) {
+                        if (!notes[j].userVotes) {
+                            notes[j].userVotes = [];
+                        }
+                        notes[j].userVotes.push(results[i].user_id);
+                    }
+                    foundNote = true;
+                    break;
+                }
+            }
+            if (foundNote) {
+                continue;
+            }
+
+
+            var note = new Note(results[i].creator_id, results[i].create_date_time, results[i].board_id, results[i].message,
+                results[i].top_pos, results[i].left_pos, results[i].sticky_id, results[i].id);
+
+            if (results[i].user_id) {
+                note.userVotes = [];
+                note.userVotes.push(results[i].user_id);
+            }
+
             notes.push(note);
         }
     }

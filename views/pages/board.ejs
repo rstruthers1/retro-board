@@ -48,7 +48,7 @@
             padding-left: 2px;
             padding-bottom: 5px;
             border: none;
-            height: 85%;
+            height: 80%;
             margin: 0px;
 
         }
@@ -277,7 +277,7 @@
                     for (var i = 0; i < data.length; i++) {
                         var note = data[i];
                         if ($("#" + note.stickyId).length == 0) {
-                            addSticky(note.message, true,  note.stickyId, note.top, note.left);
+                            addSticky(note.message, true,  note.stickyId, note.top, note.left, note.userVotes);
                         } else {
                             moveSticky( note.stickyId, note.top, note.left);
                         }
@@ -309,6 +309,11 @@
                 $("#" + data.sticky_id + "message").text(data.message);
             });
 
+            socket.on('sticky upvote', function(data) {
+                console.log("sticky upvote: " + JSON.stringify(data));
+                updateVotesForSticky(data.sticky_id, data.votes);
+            });
+
             socket.on('sticky deleted', function(data) {
                 console.log("sticky deleted: "+ JSON.stringify(data));
                 deleteSticky(data.sticky_id, true);
@@ -318,6 +323,8 @@
                 console.log("user left");
                 renderMemberList(data.usersWithConnectionStatus);
             });
+
+
 
             $("#sticky-canvas").droppable(
                 {
@@ -344,7 +351,7 @@
                 }
             }
 
-            function addSticky(message, fromSocketEvent, stickyId, top, left) {
+            function addSticky(message, fromSocketEvent, stickyId, top, left, userVotes) {
                 var stickyCanvasWidth = $("#sticky-canvas").width();
                 var stickyCanvasHeight = $("#sticky-canvas").height();
                 var x = stickyCanvasWidth /2 - 50;
@@ -365,11 +372,33 @@
                 }
                 var sticky = new Sticky(message, x, y, currentId);
                 stickies.push(sticky);
+
                 console.log(stickies);
+
+                var voteThumbColor = "lightgray";
+                var numVotes = 0;
+                if (userVotes) {
+                    numVotes = userVotes.length;
+                }
+                var userId = parseInt("<%= user.id%>");
+                var userVotedForSticky = false;
+                for (var i = 0; i < numVotes; i++) {
+                    if (userId = userVotes[i]) {
+                        userVotedForSticky = true;
+                        break;
+                    }
+                }
+                if (userVotedForSticky) {
+                    voteThumbColor = "black";
+                }
+
 
                 $("#sticky-canvas").append('<div class="sticky ui-widget-content sticky-active" id="' + currentId + '" style="' + posStyle + '">' +
                         '<div class="sticky-message-area" id="' + currentId + '-message"></div>' +
-                        '<div style="padding:2px; "><span id="' + currentId + '-current-up-votes">+0</span>&nbsp;&nbsp;' +
+                        '<div style="padding:2px; ">' +
+                        '<span id="' + currentId + '-vote-thumb" class="glyphicon glyphicon-thumbs-up" aria-hidden="true" style="font-size:14px; color:' + voteThumbColor + '; cursor: pointer;"></span> &nbsp;' +
+                        '<span id="' + currentId + '-current-up-votes" style="font-size: 14px;">' + numVotes.toString() + '</span>' +
+
                         '</div>' +
                         '</div>');
                 $("#" + currentId + "-message").text(message);
@@ -396,6 +425,19 @@
                     console.log("sticky clicked: e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
                    // alert("sticky clicked: e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
                 });
+
+
+                $("#" + currentId + "-vote-thumb").click(function(e) {
+
+                    if (userVotedForSticky) {
+                        handleDownVote($(this).attr('id'));
+                    } else {
+                        handleUpVote($(this).attr('id'));
+                    }
+
+                });
+
+
                 if (!fromSocketEvent) {
                     socket.emit('sticky added', {
                         sticky_id: currentId,
@@ -434,6 +476,81 @@
                     socket.emit('sticky message updated', { sticky_id: stickyId, message: message,
                         user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
                 }
+            }
+
+            function updateVotesForSticky(stickyId, votes) {
+                console.log("updateVotesForSticky: stickyId = " + stickyId);
+                console.log("votes = " + JSON.stringify(votes));
+                var voteThumbId = stickyId + "-votes-thumb";
+                $("#" + voteThumbId).off("click");
+
+                var voteThumbColor = "lightgray";
+                var numVotes = 0;
+                if (votes) {
+                    numVotes = votes.length;
+                }
+                var userId = parseInt("<%= user.id%>");
+                var userVotedForSticky = false;
+                for (var i = 0; i < numVotes; i++) {
+                    if (userId == votes[i].user_id) {
+                        userVotedForSticky = true;
+                        break;
+                    }
+                }
+                if (userVotedForSticky) {
+                    voteThumbColor = "black";
+                }
+
+                $("#" + voteThumbId).css("color", voteThumbColor);
+                $("#" + stickyId + "-current-up-votes").text(numVotes.toString());
+
+                $("#" +  voteThumbId).click(function(e) {
+                    if (userVotedForSticky) {
+                        handleDownVote($(this).attr('id'));
+                    } else {
+                        handleUpVote($(this).attr('id'));
+                    }
+                });
+            }
+
+            function handleUpVote(voteThumbId) {
+                console.log("in handleUpVote, id = " + voteThumbId);
+
+                var n = voteThumbId.lastIndexOf("-vote-thumb");
+                console.log("n = " + n);
+                var stickyId = voteThumbId.substr(0, n);
+
+                $("#" + voteThumbId).css("color", "black");
+                $("#" + voteThumbId).off("click");
+               // $("#" + voteThumbId).attr("id", downVoteId);
+                var votes = parseInt($("#" + stickyId + "-current-up-votes").text());
+                console.log("---- votes: " + votes);
+                votes++;
+                $("#" + stickyId + "-current-up-votes").text(votes.toString());
+                $("#" + voteThumbId).on("click", function(e) {
+                    handleDownVote($(this).attr('id'));
+                });
+                socket.emit('sticky upvote', { sticky_id: stickyId,
+                    user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
+
+            }
+
+            function handleDownVote(voteThumbId) {
+                console.log("in handleDownVote, id = " + voteThumbId);
+
+                var n = voteThumbId.lastIndexOf("-vote-thumb");
+                var stickyId = voteThumbId.substr(0, n);
+                var upVoteId = stickyId + "-upvote";
+                $("#" + voteThumbId).css("color", "lightgray");
+                $("#" + voteThumbId).off("click");
+               // $("#" + downVoteId).attr("id", upVoteId);
+                var votes = parseInt($("#" + stickyId + "-current-up-votes").text());
+                console.log("---- votes: " + votes);
+                votes--;
+                $("#" + stickyId + "-current-up-votes").text(votes.toString());
+                $("#" + voteThumbId).on("click", function(e) {
+                    handleUpVote($(this).attr('id'));
+                });
             }
 
             $("#new-sticky-button").click(function (e) {
@@ -480,8 +597,8 @@
                             stickyText = $("#" + localStickyId + "-message").text();
                         }
                         var textarea = $('<textarea class="sticky-text-dialog" id="dialog-text-area"></textarea>' +
-                                '<div id="dlg-change-up-votes" style="padding:2px; display: table-row; vertical-align: bottom; height: 1px;"><span id="dlg-current-up-votes">+0</span>&nbsp;&nbsp;' +
-                                '<button type="button" class="btn btn-xs btn-primary" id="vote=button">Add a vote</button>' +
+                                '<div id="dlg-change-up-votes" style="padding:2px; display: table-row; vertical-align: bottom; height: 1px;"><span id="dlg-current-up-votes">+0</span>&nbsp;' +
+                                '<span > <img src="/images/glyphicons-344-thumbs-up.png" height="16" width="16" style="vertical-align: top; cursor: pointer;"></span>' +
                                 '</div>');
 
 

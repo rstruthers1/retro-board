@@ -484,6 +484,23 @@ RetroBoardDb.prototype.insertUserNoteVote = function(userId, stickyId, callback)
     });
 }
 
+RetroBoardDb.prototype.deleteUserNoteVote = function(userId, stickyId, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+
+        var deleteQuery = "DELETE FROM user_note_vote WHERE " +
+                "user_id = ? AND sticky_id = ?";
+        connection.query(deleteQuery, [userId, stickyId], function(error, results, fields) {
+            callback(error);
+            connection.release();
+        });
+    });
+}
+
+
 RetroBoardDb.prototype.getUserNoteVotes = function(stickyId, callback) {
     pool.getConnection(function(error, connection) {
         if (error) {

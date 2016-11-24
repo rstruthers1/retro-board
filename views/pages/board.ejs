@@ -551,6 +551,8 @@
                 $("#" + voteThumbId).on("click", function(e) {
                     handleUpVote($(this).attr('id'));
                 });
+                socket.emit('sticky downvote', { sticky_id: stickyId,
+                    user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
             }
 
             $("#new-sticky-button").click(function (e) {

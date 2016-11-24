@@ -304,6 +304,28 @@ io.sockets.on('connection', function (socket) {
 
     });
 
+    socket.on('sticky downvote', function(data) {
+        console.log("sticky downvote: data: %j", data);
+        console.log("socket id: " + socket.id.toString());
+        db.deleteUserNoteVote(data.user_id, data.sticky_id, function(error) {
+            if (error) {
+                console.log(error);
+                return;
+            }
+
+            db.getUserNoteVotes(data.sticky_id, function(error, results) {
+                if (error) {
+                    console.log(error);
+                    return;
+                }
+                console.log("got results for getUserNoteVotes: %j", results);
+                var votesForSticky = {sticky_id: data.sticky_id, votes: results};
+                io.sockets.in(boardId).emit('sticky upvote', votesForSticky);
+            });
+        });
+
+    });
+
     socket.on('disconnect', function() {
         if (boardId) {
             var board = findBoardById(boardId);

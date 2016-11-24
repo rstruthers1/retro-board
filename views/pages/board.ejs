@@ -564,6 +564,7 @@
                 $("#dialog-modal").data("stickyId", stickyId).dialog({
                     width: 250,
                     height: 300,
+                    modal: true,
                     buttons: [
                         {
                             text: "OK",
@@ -598,10 +599,7 @@
                         if (localStickyId) {
                             stickyText = $("#" + localStickyId + "-message").text();
                         }
-                        var textarea = $('<textarea class="sticky-text-dialog" id="dialog-text-area"></textarea>' +
-                                '<div id="dlg-change-up-votes" style="padding:2px; display: table-row; vertical-align: bottom; height: 1px;"><span id="dlg-current-up-votes">+0</span>&nbsp;' +
-                                '<span > <img src="/images/glyphicons-344-thumbs-up.png" height="16" width="16" style="vertical-align: top; cursor: pointer;"></span>' +
-                                '</div>');
+                        var textarea = $('<textarea class="sticky-text-dialog" id="dialog-text-area"></textarea>');
 
 
                         $(this).html(textarea);

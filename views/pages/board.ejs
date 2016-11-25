@@ -204,14 +204,6 @@
 
         $(document).ready(function(){
 
-            $( "div[id^='sticky-section-']" ).click(function(e) {
-                console.log("e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
-               // alert("e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
-            });
-
-
-
-
             function fetchBoardMembers() {
                 $.ajax({
                     url: "/board-users?boardId=<%= board.id %>"
@@ -227,8 +219,6 @@
                     }
                 });
             };
-
-            //fetchBoardMembers();
 
             function idFoundInUserConnections(id, userConnections) {
                 for (var i = 0; i < userConnections.length; i++) {
@@ -273,7 +263,6 @@
             });
 
             socket.on('initial notes', function(data){
-               console.log("initial notes: " + JSON.stringify(data));
                 if (data) {
                     for (var i = 0; i < data.length; i++) {
                         var note = data[i];
@@ -286,14 +275,6 @@
                 }
             });
 
-            /**
-            socket.on('sticky added', function(data) {
-                console.log("sticky added: " + JSON.stringify(data));
-                if (data.user_id != "<%= user.id%>") {
-                    addSticky(data.sticky_message, true, data.sticky_id);
-                }
-            });**/
-
             socket.on('sticky dropped', function(data) {
                 console.log("sticky dropped: " + JSON.stringify(data));
                 if ($("#" + data.sticky_id).length == 0) {
@@ -301,7 +282,6 @@
                 } else {
                     moveSticky(data.sticky_id, data.top, data.left);
                 }
-
             });
 
 

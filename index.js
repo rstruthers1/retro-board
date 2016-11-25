@@ -261,7 +261,7 @@ io.sockets.on('connection', function (socket) {
         console.log("sticky dropped: data: %j", data);
         console.log("socket id: " + socket.id.toString());
 
-        db.updateNotePosition(data.top, data.left, data.sticky_id, function(error) {
+        db.updateNotePosition(data.top, data.left, data.sticky_id, data.section_name, function(error) {
             if (error) {
                 console.log(error);
             }

@@ -400,12 +400,12 @@ RetroBoardDb.prototype.findBoardNotes = function(boardId, callback) {
         }
         connection.query(
             'SELECT n.id, n.creator_id, n.create_date_time, n.board_id, ' +
-            'n.message, n.top_pos, n.left_pos, n.sticky_id, unv.user_id  ' +
+            'n.message, n.top_pos, n.left_pos, n.sticky_id, n.section, unv.user_id  ' +
             'FROM note n ' +
             'left join ' +
             'board b on n.board_id = b.id ' +
             'left join user_note_vote unv on n.id = unv.note_id ' +
-            'WHERE b.id = ? ',
+            'WHERE b.id = ?',
             [boardId],
             function(error, results, fields) {
                 var notes = createNotesWithVotesFromDatabaseResults(results);
@@ -415,15 +415,14 @@ RetroBoardDb.prototype.findBoardNotes = function(boardId, callback) {
     });
 };
 
-RetroBoardDb.prototype.updateNotePosition = function(top, left, stickyId, callback) {
+RetroBoardDb.prototype.updateNotePosition = function(top, left, stickyId, section, callback) {
     pool.getConnection(function(error, connection) {
         if (error) {
             callback(error, null);
             return;
         }
-
         var updateString = "UPDATE note SET top_pos = " + top +
-            ", left_pos = " + left + " where sticky_id = '" + stickyId + "'";
+            ", left_pos = " + left + ", section = '" + section + "' where sticky_id = '" + stickyId + "'";
         console.log("updateString: " + updateString);
         connection.query(updateString, function(error, results, fields) {
             callback(error);
@@ -612,7 +611,7 @@ function createNotesWithVotesFromDatabaseResults(results) {
 
             var note = new Note(results[i].creator_id, results[i].create_date_time, results[i].board_id, results[i].message,
                 results[i].top_pos, results[i].left_pos, results[i].sticky_id, results[i].id);
-
+            note.section = results[i].section;
             if (results[i].user_id) {
                 note.userVotes = [];
                 note.userVotes.push(results[i].user_id);

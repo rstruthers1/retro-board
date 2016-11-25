@@ -15,6 +15,7 @@ var User = require('./models/user');
 var Board = require('./models/board');
 var fs = require('fs');
 var XLSX = require('xlsx')
+var uuid = require('node-uuid')
 
 
 
@@ -564,23 +565,96 @@ module.exports = function (app, passport) {
 
     app.get('/download-notes/board-id/:boardId', function(req, res, next) {
         console.log("download-notes, boardId: " + req.params.boardId);
-        /* original data */
-        var data = [[1,2,3],[true, false, null, "sheetjs"],["foo","bar",new Date("2014-02-19T14:30Z"), "0.3"], ["baz", null, "qux"]]
-        var ws_name = "SheetJS";
-        var wb = new Workbook(), ws = sheet_from_array_of_arrays(data);
+        var data = [];
+        var boardId = req.params.boardId;
+        db.findBoardById(boardId, function(error, board) {
+            if (error) {
+                console.log("Error: %j", error);
+                var errorFileName = 'error-retrieving-notes.xlsx'
+                var errorFile = fs.readFileSync('./' + errorFileName, 'binary');
+                res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                res.setHeader('Content-Disposition', "attachment; filename=" + errorFileName);
+                return res.end(errorFile, 'binary');
+            }
+            db.findBoardNotes(boardId, function (error, notes) {
+                if (error) {
+                    console.log("Error: %j", error);
+                    var errorFileName = 'error-retrieving-notes.xlsx'
+                    var errorFile = fs.readFileSync('./' + errorFileName, 'binary');
+                    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                    res.setHeader('Content-Disposition', "attachment; filename=" + errorFileName);
+                    return res.end(errorFile, 'binary');
+                }
+                var ws_name = board.name;
+                for (var i = 0; i < notes.length; i++) {
+                    var noteRow = [];
+                    var note = notes[i];
+                    noteRow.push(note.section);
+                    noteRow.push(note.message);
+                    var voteCount = 0;
+                    if (note.userVotes) {
+                        voteCount = note.userVotes.length;
+                    }
+                    noteRow.push(voteCount);
+                    data.push(noteRow);
+                }
 
-        /* add worksheet to workbook */
-        wb.SheetNames.push(ws_name);
-        wb.Sheets[ws_name] = ws;
-        XLSX.writeFile(wb, './out.xlsx');
+                data = data.sort(NoteRowComparator);
+                data.unshift(['Section', 'Message', 'Votes']);
 
-        var file = fs.readFileSync('./out.xlsx',  'binary');
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', "attachment; filename=" + "out.xlsx");
-        return res.end(file, 'binary');
+                var wb = new Workbook(), ws = sheet_from_array_of_arrays(data);
 
+                /* add worksheet to workbook */
+                wb.SheetNames.push(ws_name);
+                wb.Sheets[ws_name] = ws;
+                var dateTimeString = moment().format('YYYY-MM-DD-h-mm-ss');
+                var fileName = 'board-' + boardId + "-" + dateTimeString + '.xlsx';
+                XLSX.writeFile(wb, './' + fileName);
 
+                var file = fs.readFileSync('./' + fileName, 'binary');
+                res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                res.setHeader('Content-Disposition', "attachment; filename=" + fileName);
+                return res.end(file, 'binary');
+
+            });
+        });
     });
+
+    function NoteRowComparator(a, b) {
+        console.log("Sorting a = " + a);
+        console.log("b = " + b);
+
+        if (a[0] == null && b[0] != null) {
+            return -1;
+        }
+
+        if (a[0] != null && b[0] == null) {
+            return 1;
+        }
+        if (!(a[0] == null && b[0] == null)) {
+            if (a[0] < b[0]) {
+                console.log(a[0] + ' < ' + b[0])
+                return -1;
+            }
+            if (a[0] > b[0]) {
+                console.log(a[0] + ' > ' + b[0])
+                return 1;
+            }
+        }
+
+        console.log(a[0] + ' == ' + b[0])
+        // section names are equal, sort by vote desc
+        if (a[2] > b[2]) {
+            console.log(a[2] + ' > ' + b[2])
+            return -1;
+        }
+        if (a[2] < b[2]) {
+            console.log(a[2] + ' < ' + b[2])
+            return 1;
+        }
+        console.log(a[2] + ' == ' + b[2])
+        return 0;
+    }
 
 
 

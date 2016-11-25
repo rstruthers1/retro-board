@@ -201,6 +201,7 @@
         }
 
 
+
         $(document).ready(function(){
 
             $( "div[id^='sticky-section-']" ).click(function(e) {
@@ -330,10 +331,11 @@
                 {
                     drop: function(event, ui) {
                         var stickyId = ui.draggable.attr('id');
+                        var boardSectionName = getBoardSectionNameForSticky(stickyId);
                         console.log("Sticky dropped :" + stickyId + ", (" + ui.position.left + ", " + ui.position.top + ")");
                         socket.emit('sticky dropped', { sticky_id: stickyId, message: $("#" + stickyId + "-message").text(), left: ui.position.left,
                             top: ui.position.top,
-                            user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
+                            user_id: "<%= user.id%>", board_id: "<%= board.id%>", section_name: boardSectionName});
                     }
                 }
             );
@@ -438,6 +440,9 @@
                 });
 
 
+                var boardSectionName = getBoardSectionNameForSticky(currentId);
+                console.log("---- boardSectionName: " + boardSectionName);
+
                 if (!fromSocketEvent) {
                     socket.emit('sticky added', {
                         sticky_id: currentId,
@@ -449,6 +454,35 @@
                     });
                 }
                 return currentId;
+            }
+
+            function getBoardSectionNameForSticky(stickyId) {
+                console.log("getBoardSectionNameForSticky");
+                var stickyPos = $("#" + stickyId).position();
+                console.log("sticky position: " + stickyPos.left + ", " + stickyPos.top);
+                var matchingSectionName = "";
+                var stickyRect = null;
+                $('[id^="sticky-section-"]').each(function() {
+                    var sectionId = $(this).attr('id');
+                    console.log("sectionId: " + sectionId);
+                    var sectionName = sectionId.replace("sticky-section-", "");
+                    var sectionPos = $(this).position();
+                    var sectionWidth = $(this).width();
+                    var sectionHeight = $(this).height();
+                    var sectionLeft = sectionPos.left;
+                    var sectionRight = sectionLeft + sectionWidth;
+                    var sectionTop = sectionPos.top;
+                    var sectionBottom = sectionTop + sectionHeight;
+                    console.log("section left, right, top, bottom: " + sectionLeft + ", " + sectionRight + ", " + sectionTop + ", " + sectionBottom);
+                    if (stickyPos.left >= sectionLeft &&
+                        stickyPos.left <= sectionRight &&
+                        stickyPos.top >= sectionTop &&
+                        stickyPos.top <= sectionBottom) {
+                        matchingSectionName = sectionName;
+                        return false;
+                    }
+                });
+                return matchingSectionName;
             }
 
             function setStickyLayerToHighestOnCanvas(stickyId) {
@@ -522,7 +556,6 @@
 
                 $("#" + voteThumbId).css("color", "black");
                 $("#" + voteThumbId).off("click");
-               // $("#" + voteThumbId).attr("id", downVoteId);
                 var votes = parseInt($("#" + stickyId + "-current-up-votes").text());
                 console.log("---- votes: " + votes);
                 votes++;
@@ -543,7 +576,6 @@
                 var upVoteId = stickyId + "-upvote";
                 $("#" + voteThumbId).css("color", "lightgray");
                 $("#" + voteThumbId).off("click");
-               // $("#" + downVoteId).attr("id", upVoteId);
                 var votes = parseInt($("#" + stickyId + "-current-up-votes").text());
                 console.log("---- votes: " + votes);
                 votes--;
@@ -626,8 +658,16 @@
                 });
             }
 
+            $("#download-notes-button").click(function (e) {
+
+                window.location = '/download-notes/board-id/<%= board.id%>';
+
+            });
+
 
         });
+
+
 
 
     </script>
@@ -656,9 +696,13 @@
             <ul class="nav navbar-nav navbar-right">
 
 
-                <li class="navbar-right">
+                <li>
                     <a href="#"  role="button" aria-expanded="false" id="new-sticky-button">
-                        <span class="glyphicon glyphicon-plus"></span>&nbsp;New Note</a>
+                        <span class="glyphicon glyphicon-plus"></span>&nbsp; New Note</a>
+                </li>
+                <li class="navbar-right">
+                    <a href="#"  role="button" aria-expanded="false" id="download-notes-button">
+                        <span class="glyphicon glyphicon-download"></span>&nbsp; Download Notes</a>
                 </li>
             </ul>
         </div>

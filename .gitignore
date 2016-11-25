@@ -5,3 +5,5 @@
 # Node build artifacts
 node_modules/
 .env
+out.xlsx
+test.xlsx

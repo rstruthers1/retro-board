@@ -14,7 +14,7 @@ var UserUniquenessChecker = require('./models/userUniquenessChecker');
 var User = require('./models/user');
 var Board = require('./models/board');
 var fs = require('fs');
-var XLSX = require('XLSX')
+var XLSX = require('xlsx')
 
 
 

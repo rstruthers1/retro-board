@@ -124,7 +124,6 @@ module.exports = function (app, passport) {
         var lastname = user.lastname;
         var username = user.username;
         var email = user.email;
-        console.log("app.get, var email: " + email);
         if (req.flash("profile_submit").toString() == "true") {
             firstname = req.flash("firstname");
             lastname = req.flash("lastname");
@@ -248,7 +247,6 @@ module.exports = function (app, passport) {
     app.post('/forgot', function (req, res, next) {
         req.flash("email", "");
         req.flash("email", req.body.email);
-        console.log("calling async.waterfall");
 
         async.waterfall([
             function(done) {
@@ -497,8 +495,6 @@ module.exports = function (app, passport) {
     });
 
     app.get('/user-search-not-in-board', function(req, res, next) {
-        console.log("---- user-search");
-        console.log(req.body);
         db.findByFirstNameOrLastNameStartsWithNotAddedToBoard(req.query.boardId, req.query.q, 50, function(err, users) {
             var data = new Object();
 
@@ -523,7 +519,6 @@ module.exports = function (app, passport) {
     });
 
     app.post('/add-users-to-board', function(req, res, next) {
-        console.log(JSON.stringify(req.body));
         db.addUsersToBoard(req.body.board_users, function (error) {
             if (error) {
                 console.log(error.toString());
@@ -537,7 +532,6 @@ module.exports = function (app, passport) {
     });
 
     app.get('/board-users', function(req, res, next) {
-        console.log("req.query.boardId: " + req.query.boardId);
         db.findBoardUsers(req.query.boardId, 500, function (error, users) {
             if (error) {
                 console.log(error.toString());
@@ -585,7 +579,7 @@ module.exports = function (app, passport) {
 
     function createDownloadNotesErrorFileResponse(res) {
         console.log("Error: %j", error);
-        var errorFileName = 'error-retrieving-notes.xlsx'
+        var errorFileName = 'error-retrieving-notes.xlsx';
         var errorFile = fs.readFileSync('./' + errorFileName, 'binary');
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', "attachment; filename=" + errorFileName);

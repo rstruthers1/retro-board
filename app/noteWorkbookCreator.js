@@ -59,7 +59,7 @@ NoteWorkbookCreator.prototype.createWorkbook = function(notes, boardId, boardNam
     data.unshift(['Section', 'Message', 'Votes']);
 
     var wb = new Workbook();
-    wb.createSheetFromArrayOfArrays(data, boardName);
+    wb.addSheetFromArrayOfArrays(data, boardName);
 
     XLSX.writeFile(wb, './' + fileName);
     return fileName;

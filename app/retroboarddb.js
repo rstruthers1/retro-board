@@ -174,7 +174,6 @@ RetroBoardDb.prototype.updateUser = function(user, callback) {
 RetroBoardDb.prototype.updateUserResetInfo = function(email, resetPasswordToken, resetPasswordExpires, callback) {
     var error = null;
     var dateTimeString = resetPasswordExpires.format("YYYY-MM-DD HH:mm:ss");
-    console.log("dateTimeString: " + dateTimeString);
     var update = "UPDATE user SET " +
         "reset_password_token = '" + resetPasswordToken + "', " +
         "reset_password_expires = '" + dateTimeString + "' " +
@@ -258,7 +257,6 @@ RetroBoardDb.prototype.findBoardsByOwnerId = function(ownerId, callback) {
 };
 
 RetroBoardDb.prototype.findBoardsByUserId = function(userId, callback) {
-    console.log("userId: " + userId);
     pool.getConnection(function(error, connection) {
         if (error) {
             console.log(error.toString());
@@ -270,9 +268,6 @@ RetroBoardDb.prototype.findBoardsByUserId = function(userId, callback) {
             'LEFT JOIN board_user bu on b.id = bu.board_id ' +
             'WHERE bu.user_id = ?',
             [userId], function(error, results, fields) {
-                console.log("query callback");
-                console.log("error: " + error);
-                console.log(JSON.stringify(results));
                 var boards = createBoardsFromDatabaseResults(results);
                 callback(error, boards);
                 connection.release();
@@ -344,7 +339,6 @@ RetroBoardDb.prototype.addUsersToBoard = function(boardAndUserIds, callback) {
             callback(error, null);
             return;
         }
-        console.log("boardAndUserIds: " + JSON.stringify(boardAndUserIds));
         connection.query('INSERT INTO board_user (board_id, user_id) VALUES ?', [boardAndUserIds], function(error, results, fields) {
             callback(error);
             connection.release();
@@ -423,7 +417,6 @@ RetroBoardDb.prototype.updateNotePosition = function(top, left, stickyId, sectio
         }
         var updateString = "UPDATE note SET top_pos = " + top +
             ", left_pos = " + left + ", section = '" + section + "' where sticky_id = '" + stickyId + "'";
-        console.log("updateString: " + updateString);
         connection.query(updateString, function(error, results, fields) {
             callback(error);
             connection.release();
@@ -440,7 +433,6 @@ RetroBoardDb.prototype.updateNoteMessage = function(message, stickyId, callback)
 
         var updateString = "UPDATE note SET message = '" + message + "' "
             + " where sticky_id = '" + stickyId + "'";
-        console.log("updateString: " + updateString);
         connection.query(updateString, function(error, results, fields) {
             callback(error);
             connection.release();
@@ -465,9 +457,7 @@ RetroBoardDb.prototype.insertUserNoteVote = function(userId, stickyId, callback)
                 callback("Unable to find sticky note with id: " + stickyId);
                 return;
             }
-            console.log("note results: %j", results);
             var noteId = results[0].id;
-            console.log("note id: " + noteId);
             var userNoteVoteValues = {user_id: userId, note_id: noteId, sticky_id: stickyId};
             var insertQuery = "INSERT INTO user_note_vote SET ?";
             connection.query(insertQuery, userNoteVoteValues, function(error, results, fields) {
@@ -528,7 +518,6 @@ RetroBoardDb.prototype.deleteNote = function(stickyId, callback) {
 
         var deleteString = "delete from note "
             + " where sticky_id = ?";
-        console.log("deleteString: " + deleteString);
         connection.query(deleteString, [stickyId], function(error, results, fields) {
             callback(error);
             connection.release();

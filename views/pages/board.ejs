@@ -345,7 +345,6 @@
                     x = left;
                 }
                 var posStyle = "position: absolute; top: " + y + "px; left: " + x + "px;";
-                console.log("posStyle: " + posStyle);
                 var currentId = "";
                 if (!stickyId) {
                     currentId = generateUUID();
@@ -355,7 +354,6 @@
                 var sticky = new Sticky(message, x, y, currentId);
                 stickies.push(sticky);
 
-                console.log(stickies);
 
                 var voteThumbColor = "lightgray";
                 var numVotes = 0;
@@ -391,23 +389,16 @@
                     setStickyLayerToHighestOnCanvas($(this).attr('id'));
                 }  );
                 $("#" + currentId).dblclick(function(e){
-                    console.log("double click happened");
                     showDialog($(this).attr('id'));
                 });
 
                 $("#" + currentId).on('doubletap', function(e){
-                    console.log("double click happened");
                     showDialog($(this).attr('id'));
                 });
 
 
                 $("#" + currentId).css("z-index", 0);
                 setStickyLayerToHighestOnCanvas(currentId);
-                $("#" + currentId ).click(function(e) {
-                    console.log("sticky clicked: e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
-                   // alert("sticky clicked: e.pageX, e.pageY: " + e.pageX + ", " + e.pageY);
-                });
-
 
                 $("#" + currentId + "-vote-thumb").click(function(e) {
 
@@ -421,7 +412,6 @@
 
 
                 var boardSectionName = getBoardSectionNameForSticky(currentId);
-                console.log("---- boardSectionName: " + boardSectionName);
 
                 if (!fromSocketEvent) {
                     socket.emit('sticky added', {
@@ -437,14 +427,11 @@
             }
 
             function getBoardSectionNameForSticky(stickyId) {
-                console.log("getBoardSectionNameForSticky");
                 var stickyPos = $("#" + stickyId).position();
-                console.log("sticky position: " + stickyPos.left + ", " + stickyPos.top);
                 var matchingSectionName = "";
                 var stickyRect = null;
                 $('[id^="sticky-section-"]').each(function() {
                     var sectionId = $(this).attr('id');
-                    console.log("sectionId: " + sectionId);
                     var sectionName = sectionId.replace("sticky-section-", "");
                     var sectionPos = $(this).position();
                     var sectionWidth = $(this).width();
@@ -453,7 +440,6 @@
                     var sectionRight = sectionLeft + sectionWidth;
                     var sectionTop = sectionPos.top;
                     var sectionBottom = sectionTop + sectionHeight;
-                    console.log("section left, right, top, bottom: " + sectionLeft + ", " + sectionRight + ", " + sectionTop + ", " + sectionBottom);
                     if (stickyPos.left >= sectionLeft &&
                         stickyPos.left <= sectionRight &&
                         stickyPos.top >= sectionTop &&
@@ -469,13 +455,10 @@
                 var maxLayer = 1;
                 $(".sticky").each(function(index, element) {
                     var zLayer = parseInt($(this).css("z-index"));
-                    console.log("zLayer: " + zLayer);
                     if (zLayer > maxLayer) {
                         maxLayer = zLayer;
                     }
                 });
-                console.log("maxLayer: " + maxLayer);
-                console.log("z-index for sticky with id " + stickyId + ": " + $("#" + stickyId).css("z-index"));
                 if (maxLayer > parseInt($("#" + stickyId).css("z-index"))) {
                     $("#" + stickyId).css("z-index", maxLayer + 1);
                 }
@@ -485,7 +468,6 @@
                 if (!stickyId) {
                     addSticky(message);
                 } else {
-                    console.log("stickyId = " + stickyId);
                     $("#" + stickyId + "-message").text(message);
                     socket.emit('sticky message updated', { sticky_id: stickyId, message: message,
                         user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
@@ -493,8 +475,6 @@
             }
 
             function updateVotesForSticky(stickyId, votes) {
-                console.log("updateVotesForSticky: stickyId = " + stickyId);
-                console.log("votes = " + JSON.stringify(votes));
                 var voteThumbId = stickyId + "-votes-thumb";
                 $("#" + voteThumbId).off("click");
 
@@ -528,16 +508,12 @@
             }
 
             function handleUpVote(voteThumbId) {
-                console.log("in handleUpVote, id = " + voteThumbId);
-
                 var n = voteThumbId.lastIndexOf("-vote-thumb");
-                console.log("n = " + n);
                 var stickyId = voteThumbId.substr(0, n);
 
                 $("#" + voteThumbId).css("color", "black");
                 $("#" + voteThumbId).off("click");
                 var votes = parseInt($("#" + stickyId + "-current-up-votes").text());
-                console.log("---- votes: " + votes);
                 votes++;
                 $("#" + stickyId + "-current-up-votes").text(votes.toString());
                 $("#" + voteThumbId).on("click", function(e) {
@@ -549,15 +525,12 @@
             }
 
             function handleDownVote(voteThumbId) {
-                console.log("in handleDownVote, id = " + voteThumbId);
-
                 var n = voteThumbId.lastIndexOf("-vote-thumb");
                 var stickyId = voteThumbId.substr(0, n);
                 var upVoteId = stickyId + "-upvote";
                 $("#" + voteThumbId).css("color", "lightgray");
                 $("#" + voteThumbId).off("click");
                 var votes = parseInt($("#" + stickyId + "-current-up-votes").text());
-                console.log("---- votes: " + votes);
                 votes--;
                 $("#" + stickyId + "-current-up-votes").text(votes.toString());
                 $("#" + voteThumbId).on("click", function(e) {
@@ -620,7 +593,6 @@
                         $("#dialog-text-area").keypress(function (e) {
                             var code = (e.keyCode ? e.keyCode : e.which);
                             if (code == 13) {
-                                console.log("User hit enter")
                                 $("#dialog-modal").dialog( "close" );
                                 var localStickyId = $("#dialog-modal").data('stickyId');
                                 addOrUpdateSticky(localStickyId, $('#dialog-text-area').val());

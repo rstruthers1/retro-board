@@ -192,7 +192,6 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('user joined', function(data) {
         // User connected to board
-        //console.log("data %j", data);
         console.log("socket id: " + socket.id.toString());
         boardId = data.board_id;
         socket.join(data.board_id);
@@ -214,8 +213,6 @@ io.sockets.on('connection', function (socket) {
             if (error) {
                 console.log(error.toString());
             } else {
-
-               console.log("notes: " + JSON.stringify(notes));
                 socket.emit("initial notes", notes);
                 db.findBoardUsers(boardId, 500, function (error, users) {
                     if (error) {
@@ -223,7 +220,6 @@ io.sockets.on('connection', function (socket) {
                     } else {
                         var data = {};
                         data.usersWithConnectionStatus = createUsersWithConnectionStatusList(users, userConnections);
-                        //console.log(JSON.stringify(data));
                         io.sockets.in(boardId).emit('user joined', data);
                     }
                 });
@@ -235,7 +231,6 @@ io.sockets.on('connection', function (socket) {
     socket.on('sticky added', function(data) {
         console.log("data %j", data);
         console.log("socket id: " + socket.id.toString());
-       // io.sockets.in(boardId).emit('sticky added', data);
 
         db.addNoteToBoard(data.user_id, data.board_id, data.sticky_message, data.top, data.left, data.sticky_id, function(error) {
             if (error) {

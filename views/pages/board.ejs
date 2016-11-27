@@ -494,7 +494,6 @@
                 if (userVotedForSticky) {
                     voteThumbColor = "black";
                 }
-
                 $("#" + voteThumbId).css("color", voteThumbColor);
                 $("#" + stickyId + "-current-up-votes").text(numVotes.toString());
 
@@ -510,7 +509,6 @@
             function handleUpVote(voteThumbId) {
                 var n = voteThumbId.lastIndexOf("-vote-thumb");
                 var stickyId = voteThumbId.substr(0, n);
-
                 $("#" + voteThumbId).css("color", "black");
                 $("#" + voteThumbId).off("click");
                 var votes = parseInt($("#" + stickyId + "-current-up-votes").text());
@@ -521,7 +519,6 @@
                 });
                 socket.emit('sticky upvote', { sticky_id: stickyId,
                     user_id: "<%= user.id%>", board_id: "<%= board.id%>"});
-
             }
 
             function handleDownVote(voteThumbId) {
@@ -586,7 +583,6 @@
                         }
                         var textarea = $('<textarea class="sticky-text-dialog" id="dialog-text-area"></textarea>');
 
-
                         $(this).html(textarea);
                         $("#dialog-text-area").text(stickyText);
 
@@ -600,28 +596,15 @@
                             }
                         });
 
-                        if (localStickyId) {
-//                            $('#dialog-text-area').select();
-                            $('#dialog-text-area').focus();
-                        } else {
-                            $('#dialog-text-area').focus();
-                        }
+                        $('#dialog-text-area').focus();
                     }
                 });
             }
 
             $("#download-notes-button").click(function (e) {
-
                 window.location = '/download-notes/board-id/<%= board.id%>';
-
             });
-
-
         });
-
-
-
-
     </script>
 
 </head>

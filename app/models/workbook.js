@@ -35,7 +35,15 @@ function sheetFromArrayOfArrays(data, opts) {
             if (cell.v == null) continue;
             var cell_ref = XLSX.utils.encode_cell({c: C, r: R});
 
-            if (typeof cell.v === 'number') cell.t = 'n';
+            if (typeof cell.v === 'number') {
+                cell.t = 'n';
+                cell.s = {
+                    "alignment": {
+                        "horizontal": "right",
+                        "vertical": "top"
+                    }
+                }
+            }
             else if (typeof cell.v === 'boolean') cell.t = 'b';
             else if (cell.v instanceof Date) {
                 cell.t = 'n';

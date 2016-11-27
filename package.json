@@ -36,7 +36,7 @@
     "reload": "^1.0.1",
     "socket.io": "^1.4.8",
     "validator": "^5.7.0",
-    "xlsx": "^0.8.0"
+    "xlsx-style": "^0.8.13"
   },
   "repository": {
     "type": "git",

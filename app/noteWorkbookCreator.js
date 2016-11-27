@@ -3,7 +3,7 @@
  */
 
 var Workbook = require('./models/workbook');
-var XLSX = require('xlsx');
+var XLSX = require('xlsx-style');
 var moment = require('moment');
 
 function NoteWorkbookCreator() {
@@ -59,7 +59,16 @@ NoteWorkbookCreator.prototype.createWorkbook = function(notes, boardId, boardNam
     data.unshift(['Section', 'Message', 'Votes']);
 
     var wb = new Workbook();
-    wb.addSheetFromArrayOfArrays(data, boardName);
+
+    var wscols = [
+        null,
+        {wch:50},
+        null
+    ];
+
+    wb.addSheetFromArrayOfArrays(data, boardName, wscols);
+
+
 
     XLSX.writeFile(wb, './' + fileName);
     return fileName;

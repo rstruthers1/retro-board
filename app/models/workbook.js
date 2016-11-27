@@ -2,7 +2,7 @@
  * Created by Rachel on 11/25/2016.
  */
 
-var XLSX = require('xlsx');
+var XLSX = require('xlsx-style');
 
 
 function Workbook() {
@@ -42,17 +42,48 @@ function sheetFromArrayOfArrays(data, opts) {
                 cell.z = XLSX.SSF._table[14];
                 cell.v = datenum(cell.v);
             }
-            else cell.t = 's';
+            else {
+
+                cell.t = 's';
+                if (R == 0) {
+                    cell.s = {
+                        "border": {
+                            "bottom": {
+                                "style": "thick",
+                                "color": {
+                                    "auto": 1
+                                }
+                            }
+                        },
+                        "font": {
+                            bold: true
+                        }
+                    }
+                } else {
+                    cell.s = {
+                        "alignment": {
+                            "wrapText": 1,
+                            "horizontal": "left",
+                            "vertical": "top"
+
+                        }
+                    }
+                }
+            }
 
             ws[cell_ref] = cell;
         }
     }
     if (range.s.c < 10000000) ws['!ref'] = XLSX.utils.encode_range(range);
+
     return ws;
 }
 
-Workbook.prototype.addSheetFromArrayOfArrays = function (data, worksheetName) {
+Workbook.prototype.addSheetFromArrayOfArrays = function (data, worksheetName, wscols) {
     var ws = sheetFromArrayOfArrays(data);
+    if (wscols) {
+        ws['!cols'] = wscols;
+    }
     /* add worksheet to workbook */
     this.SheetNames.push(worksheetName);
     this.Sheets[worksheetName] = ws;

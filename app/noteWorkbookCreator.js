@@ -5,6 +5,10 @@
 var Workbook = require('./models/workbook');
 var XLSX = require('xlsx-style');
 var moment = require('moment');
+var path = require('path');
+var fs = require('fs');
+
+var FIVE_MINUTES = 5 * 60 * 1000; /* ms */
 
 function NoteWorkbookCreator() {
 
@@ -38,7 +42,33 @@ function NoteRowComparator(a, b) {
     return 0;
 }
 
+function deleteOldNoteFiles() {
+    var startPath = "./";
+    var files = fs.readdirSync(startPath);
+    var now = new Date();
+    for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        if (!(file.startsWith("board-") && file.endsWith(".xlsx"))) {
+            continue;
+        }
+        var filename=path.join(startPath, file);
+        var stats = fs.statSync(filename);
+        console.log("---------------------------------");
+        console.log(filename);
+        console.log(stats.mtime);
+        if (now - stats.mtime > FIVE_MINUTES) {
+            console.log("Older than 5 minutes, deleting");
+            fs.unlinkSync(filename);
+        } else {
+            console.log("Newer that 5 minutes, not deleting");
+        }
+        console.log("---------------------------------");
+
+    }
+}
+
 NoteWorkbookCreator.prototype.createWorkbook = function(notes, boardId, boardName) {
+    deleteOldNoteFiles();
     var dateTimeString = moment().format('YYYY-MM-DD-h-mm-ss');
     var fileName = 'board-' + boardId + "-" + dateTimeString + '.xlsx';
     var data = [];
@@ -67,8 +97,6 @@ NoteWorkbookCreator.prototype.createWorkbook = function(notes, boardId, boardNam
     ];
 
     wb.addSheetFromArrayOfArrays(data, boardName, wscols);
-
-
 
     XLSX.writeFile(wb, './' + fileName);
     return fileName;

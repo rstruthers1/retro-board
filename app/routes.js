@@ -444,6 +444,117 @@ module.exports = function (app, passport) {
         });
     });
 
+    app.get('/edit-board', isLoggedIn, function (req, res, next) {
+        db.hasBoardAdminPermission(req.user.id, req.query.boardId, function(err, hasPermission) {
+            if (err) {
+                res.render('pages/edit-board', {
+                    message: "",
+                    error_message: err,
+                    name: "",
+                    colors: req.app.get("sectionColors").colors,
+                    board: null
+                });
+                return;
+            }
+            if (hasPermission) {
+                db.findBoardByIdPlusSections(req.query.boardId, function (err, board) {
+                    var boardErrorMessage = "";
+                    if (err) {
+                        boardErrorMessage = err.toString();
+                    }
+
+
+                    console.log(JSON.stringify(board));
+                    res.render('pages/board-edit', {
+                        message: req.flash("createMessage"),
+                        error_message: req.flash("error_createMessage"),
+                        name: req.flash("board_name"),
+                        colors: req.app.get("sectionColors").colors,
+                        board: board
+                    });
+
+                });
+            } else {
+                res.render('pages/edit-board', {
+                    message: "",
+                    error_message: "",
+                    name: "",
+                    colors: req.app.get("sectionColors").colors,
+                    board: null
+                });
+                return;
+            }
+        });
+    });
+
+
+    app.post('/edit-board', isLoggedIn, function (req, res, next) {
+        console.log("board id: " + req.body.boardId );
+        db.hasBoardAdminPermission(req.user.id, req.body.boardId, function(err, hasPermission) {
+            if (err) {
+                res.render('pages/board-edit', {
+                    message: "",
+                    error_message: err,
+                    name: "",
+                    colors: req.app.get("sectionColors").colors,
+                    board: new Board("", null, null, null)
+                });
+                return;
+            }
+            if (hasPermission) {
+
+
+                var board = new Board(req.body.name, req.user.id, null, req.body.boardId);
+                board.sections = [];
+                req.flash("board_name", req.body.name);
+
+                console.log("board_name: ", req.body.name)
+                console.log("initializing board sections");
+                for (var i = 1; i <= 4; i++) {
+                    var section = new Section(req.body["section-id-" + i], req.body["section-" + i], req.body["color-" + i], i);
+                    console.log("id: " + req.body["section-id-" + i]);
+                    console.log("name: " + req.body["section-" + i]);
+                    console.log("color: " + req.body["color-" + i]);
+                    console.log(JSON.stringify(section));
+                    board.sections.push(section);
+                }
+
+
+                db.updateBoard(board, function(error) {
+                    if (error) {
+                        res.render('pages/board-edit', {
+                            message: "",
+                            error_message: error,
+                            name: "",
+                            colors: req.app.get("sectionColors").colors,
+                            board: new Board("", null, null, null)
+                        });
+                        return;
+                    }
+
+                    res.redirect("/board?boardId=" + board.id);
+                    return;
+
+
+
+                });
+
+
+
+            } else {
+                res.render('pages/board-edit', {
+                    message: "",
+                    error_message: "",
+                    name: "",
+                    colors: req.app.get("sectionColors").colors,
+                    board: new Board("", null, null, null)
+                });
+                return;
+            }
+        });
+    });
+
+
     // =====================================
     // Board
     // =====================================

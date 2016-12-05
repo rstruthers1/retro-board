@@ -5,6 +5,7 @@ var mysql = require("mysql2");
 var bcrypt = require("bcrypt-nodejs");
 var pool = mysql.createPool(process.env.CLEARDB_DATABASE_URL);
 var moment = require('moment');
+var async = require('async');
 
 var User = require('./models/user');
 var Board = require('./models/board');
@@ -262,6 +263,51 @@ RetroBoardDb.prototype.insertBoard = function(newBoard, callback) {
             }
 
 
+        });
+    });
+};
+
+
+RetroBoardDb.prototype.updateBoard = function(board, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error);
+            connection.release();
+            return;
+        }
+
+        var updateBoardSql = "UPDATE BOARD SET name = ? WHERE id = ?";
+
+
+        connection.query(updateBoardSql, [board.name, board.id], function(error, results, fields) {
+
+            if (board.sections && board.sections.length > 0) {
+                var updateSectionsSql = "UPDATE board_section SET " +
+                    "name = ?, color = ?, order_num = ? " +
+                    "where id = ?";
+
+                async.eachSeries(board.sections, function iteratee(section, asyncCallback) {
+
+                    var sectionRecord = [section.name, section.color, section.orderNum, section.id];
+
+                    connection.query(updateSectionsSql, sectionRecord, function(error, results, fields) {
+                        if (error) {
+                            console.log(JSON.stringify(error));
+                        }
+                        asyncCallback(error);
+
+
+                    });
+
+                }, function done() {
+                    callback(error);
+                    connection.release();
+                });
+
+            } else {
+                callback(null);
+                connection.release();
+            }
         });
     });
 };

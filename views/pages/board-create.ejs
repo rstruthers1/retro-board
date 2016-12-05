@@ -4,7 +4,9 @@
     <% include ../partials/header.ejs %>
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/jquery.validate.min.js"></script>
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/additional-methods.min.js"></script>
+    <script src="/js/jquery.simplecolorpicker.js"></script>
 
+    <link rel="stylesheet" href="/css/jquery.simplecolorpicker.css">
 
     <link rel="stylesheet" type="text/css" href="/css/cmxformTemplate.css"/>
     <link rel="stylesheet" type="text/css" href="/css/cmxformmine.css"/>
@@ -33,6 +35,13 @@
                 }
             });
         });
+
+
+        $(document).ready(function() {
+            <% for (var sectionNum = 1; sectionNum <= 4; sectionNum++) {%>
+            $('select[name="color-<%= sectionNum%>"]').simplecolorpicker({picker: true, theme: 'glyphicons'});
+            <% } %>
+        });
         </script>
 
 
@@ -56,9 +65,35 @@
                     <legend>Create a New Board</legend>
 
                     <p>
-                        <label for="name">Name</label>
+                        <label for="name" style="width: 100px;">Name</label>
                         <input id="name" name="name" type="name" class="form-control input-sm" style="width: 300px;"
-                        value = "<%= name%>">
+                        value = "<%= board.name%>">
+                    </p>
+                    <p>
+                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">Enter section names and colors</div>
+
+                    <% for (var sectionNum = 1; sectionNum <= 4; sectionNum++) {
+                        var section = board.sections[sectionNum - 1]%>
+
+                    <div style="margin-bottom: 10px;">
+                        <label for="section-<%= sectionNum %>" style="width: 100px;">Section <%= sectionNum %></label>
+                        <input id="section-<%= sectionNum %>" name="section-<%= sectionNum %>" type="name" class="form-control input-sm" style="width: 200px;"
+                               value = "<%= section.name%>">
+                        <label for="color-<%= sectionNum %>" style="width:75px; padding-left:10px;">Color <%= sectionNum %></label>
+                        <span style="border: 1px solid #cccccc; padding-top: 3px; padding-bottom: 3px; border-radius: 2px;">
+                        <select name="color-<%= sectionNum %>">
+                            <% for (var i = 0; i < colors.length; i++) {%>
+                            <% if (colors[i].name === section.color) {%>
+                            <option value="<%= colors[i].name%>" selected><%= colors[i].name%></option>
+                            <% } else { %>
+                            <option value="<%= colors[i].name%>"><%= colors[i].name%></option>
+                            <% }%>
+                            <%} %>
+                        </select>
+                        </span>
+                    </div>
+                    <%}%>
+
                     </p>
 
                     <hr style="background-color: #532F8C">

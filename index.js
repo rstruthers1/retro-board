@@ -12,6 +12,7 @@ var User = require('./app/models/user');
 var flash    = require('connect-flash');
 var UserConnection = require('./app/models/userConnection');
 var Board = require('./app/models/board');
+var SectionColors = require('./app/sectionColors');
 
 
 var morgan = require('morgan');
@@ -20,6 +21,9 @@ var bodyParser = require('body-parser');
 var session = require('express-session');
 var methodOverride = require('method-override');
 
+var sectionColors = new SectionColors();
+sectionColors.loadColors("./colors.xlsx");
+app.set("sectionColors", sectionColors);
 
 var port = process.env.PORT || 8080;
 
@@ -256,7 +260,7 @@ io.sockets.on('connection', function (socket) {
         console.log("sticky dropped: data: %j", data);
         console.log("socket id: " + socket.id.toString());
 
-        db.updateNotePosition(data.top, data.left, data.sticky_id, data.section_name, function(error) {
+        db.updateNotePosition(data.top, data.left, data.sticky_id, data.section_id, function(error) {
             if (error) {
                 console.log(error);
             }

@@ -13,6 +13,7 @@ var db = new RetroBoardDb();
 var UserUniquenessChecker = require('./models/userUniquenessChecker');
 var User = require('./models/user');
 var Board = require('./models/board');
+var Section = require('./models/section');
 var fs = require('fs');
 var XLSX = require('xlsx-style');
 var NoteWorkbookCreator = require('./noteWorkbookCreator');
@@ -380,16 +381,40 @@ module.exports = function (app, passport) {
     // =====================================
 
     app.get('/board-create', isLoggedIn, function (req, res, next) {
+        var name = "";
+        var ownerId =  req.user.id;
+        var createdDateTime = null;
+        var id = null;
+        var board = new Board(name, ownerId, createdDateTime, id);
+        board.sections = [];
+        var sectionNames = ["Glad", "Sad", "Mad", "Try"];
+        var sectionColors = ["lightgreen", "lightyellow", "lightpink", "lightblue"];
+        for (var i = 0; i < 4; i++) {
+            var section = new Section(null, sectionNames[i], sectionColors[i], i + 1);
+            board.sections.push(section);
+        }
+        console.log(JSON.stringify(board));
         res.render('pages/board-create', {
             message: req.flash("createMessage"),
             error_message: req.flash("error_createMessage"),
-            name: req.flash("board_name")
+            name: req.flash("board_name"),
+            colors: req.app.get("sectionColors").colors,
+            board: board
         });
     });
 
     app.post('/board-create', isLoggedIn, function (req, res, next) {
+        var newBoard = new Board(req.body.name, req.user.id, null, null);
+        newBoard.sections = [];
         req.flash("board_name", req.body.name);
-        db.insertBoard(req.body.name, req.user.id, function(error, board) {
+        for (var i = 1; i <= 4; i++) {
+            var section = new Section(null, req.body["section-" + i], req.body["color-" + i], i);
+            console.log(JSON.stringify(section));
+            newBoard.sections.push(section);
+        }
+
+
+        db.insertBoard(newBoard, function(error, board) {
             if (error) {
                 req.flash("error_createMessage", error.toString());
                 res.redirect("/board-create");
@@ -435,7 +460,7 @@ module.exports = function (app, passport) {
                 return;
             }
             if (hasPermission) {
-                db.findBoardById(req.query.boardId, function (err, board) {
+                db.findBoardByIdPlusSections(req.query.boardId, function (err, board) {
                     var boardErrorMessage = "";
                     if (err) {
                         boardErrorMessage = err.toString();

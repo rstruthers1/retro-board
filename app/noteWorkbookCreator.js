@@ -63,19 +63,18 @@ function deleteOldNoteFiles() {
             console.log("Newer that 5 minutes, not deleting");
         }
         console.log("---------------------------------");
-
     }
 }
 
 NoteWorkbookCreator.prototype.createWorkbook = function(notes, boardId, boardName) {
     deleteOldNoteFiles();
-    var dateTimeString = moment().format('YYYY-MM-DD-h-mm-ss');
+    var dateTimeString = moment().format('YYYY-MM-DD-hhmmss');
     var fileName = 'board-' + boardId + "-" + dateTimeString + '.xlsx';
     var data = [];
     for (var i = 0; i < notes.length; i++) {
         var noteRow = [];
         var note = notes[i];
-        noteRow.push(note.section);
+        noteRow.push(note.sectionName);
         noteRow.push(note.message);
         var voteCount = 0;
         if (note.userVotes) {

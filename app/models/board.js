@@ -10,6 +10,7 @@ function Board(name, ownerId, createdDateTime, id) {
     this.createdDateTime = createdDateTime;
     this.id = id;
     this.userConnections = [];
+    this.sections = [];
 }
 
 Board.prototype.addUserConnection = function(userConnection) {

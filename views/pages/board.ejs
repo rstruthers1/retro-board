@@ -12,7 +12,6 @@
     <style>
         .sticky {
               background-color: yellow;
-
               color: #333;
               width: 100px;
               height: 100px;
@@ -135,7 +134,8 @@
 
         .center-me {
             margin:0 auto;
-            width: 50px;
+            text-align: center;
+           /** width: 400px; **/
         }
 
         .navbar-brand {
@@ -311,11 +311,11 @@
                 {
                     drop: function(event, ui) {
                         var stickyId = ui.draggable.attr('id');
-                        var boardSectionName = getBoardSectionNameForSticky(stickyId);
+                        var boardSectionId = getBoardSectionIdForSticky(stickyId);
                         console.log("Sticky dropped :" + stickyId + ", (" + ui.position.left + ", " + ui.position.top + ")");
                         socket.emit('sticky dropped', { sticky_id: stickyId, message: $("#" + stickyId + "-message").text(), left: ui.position.left,
                             top: ui.position.top,
-                            user_id: "<%= user.id%>", board_id: "<%= board.id%>", section_name: boardSectionName});
+                            user_id: "<%= user.id%>", board_id: "<%= board.id%>", section_id: boardSectionId});
                     }
                 }
             );
@@ -410,9 +410,6 @@
 
                 });
 
-
-                var boardSectionName = getBoardSectionNameForSticky(currentId);
-
                 if (!fromSocketEvent) {
                     socket.emit('sticky added', {
                         sticky_id: currentId,
@@ -426,7 +423,7 @@
                 return currentId;
             }
 
-            function getBoardSectionNameForSticky(stickyId) {
+            function getBoardSectionIdForSticky(stickyId) {
                 var stickyPos = $("#" + stickyId).position();
                 var matchingSectionName = "";
                 var stickyRect = null;
@@ -450,6 +447,8 @@
                 });
                 return matchingSectionName;
             }
+
+
 
             function setStickyLayerToHighestOnCanvas(stickyId) {
                 var maxLayer = 1;
@@ -645,33 +644,23 @@
     <div class="row">
     <div id="sticky-canvas" style="position:absolute; top: 100px; left: 0px; width:1310px;  height: 600px; background-color: black;" >
         <div id="dialog-modal" title="Basic modal dialog" style="display: none; padding:2px; margin:0px; display: table;"></div>
-        <div id="sticky-section-glad" class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightgreen;">
-            <div class="center-me sticky-canvas-quadrant-title">Glad</div>
+        <% for (var i = 0; i < board.sections.length; i++) { %>
+        <div id="sticky-section-<%= board.sections[i].id  %>" class="ui-widget-content sticky-canvas-quadrant" style="background-color: <%= board.sections[i].color %>;">
+
+            <div class="center-me sticky-canvas-quadrant-title"><%= board.sections[i].name %></div>
         </div>
-        <div id="sticky-section-sad" class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightyellow;">
-            <div class="center-me sticky-canvas-quadrant-title">Sad</div>
-        </div>
-        <div id="sticky-section-mad" class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightpink;">
-            <div class="center-me sticky-canvas-quadrant-title">Mad</div>
-        </div>
-        <div id="sticky-section-try" class="ui-widget-content sticky-canvas-quadrant" style="background-color: lightblue;">
-            <div class="center-me sticky-canvas-quadrant-title">Try</div>
-        </div>
+        <% } %>
     </div>
         <div id="board-members-panel" style="position: absolute; top: 100px; left: 1310px; height: 600px; width: 300px; background-color: white; border: 1px solid grey; ">
                 <span style="background-color: lightcyan; padding-top: 5px; display: block; text-align: center; float: none; font-weight: bold; font-size: 16px;">Members</span>
                 <hr style="	border-top: 1px double lightgray; margin-top: 0px; margin-bottom: 0px;">
             <div id="board-members-inner-panel" style="height: 560px;">
             <ul class="list-group" id="board-members" style="height: 560px;">
-                <!--
-                <li class="list-group-item">Rachel Struthers</li>
-                <li class="list-group-item">Fred Smith</li>
-                -->
             </ul>
             </div>
         </div>
         </div>
-    <div>
+    <div >
 
     </div>
 

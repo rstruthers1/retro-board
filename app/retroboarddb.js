@@ -9,6 +9,7 @@ var moment = require('moment');
 var User = require('./models/user');
 var Board = require('./models/board');
 var Note = require('./models/note');
+var Section = require('./models/section');
 
 
 function RetroBoardDb() {
@@ -218,10 +219,11 @@ RetroBoardDb.prototype.clearUserResetInfoAndSetPassword = function(user, callbac
     });
 };
 
-RetroBoardDb.prototype.insertBoard = function(boardName, ownerId, callback) {
+RetroBoardDb.prototype.insertBoard = function(newBoard, callback) {
+
     var now = moment();
     var dateTimeString = now.format("YYYY-MM-DD HH:mm:ss");
-    var boardValues = {name: boardName, owner_id: ownerId, create_date_time: dateTimeString};
+    var boardValues = {name: newBoard.name, owner_id: newBoard.ownerId, create_date_time: dateTimeString};
 
     pool.getConnection(function(error, connection) {
         if (error) {
@@ -229,15 +231,37 @@ RetroBoardDb.prototype.insertBoard = function(boardName, ownerId, callback) {
             return;
         }
         connection.query('INSERT INTO board SET ?', boardValues, function(error, results, fields) {
-            var board = new Board();
-            if (results) {
-                board.id = results.insertId;
-                board.name = boardName;
-                board.ownerId = ownerId;
-                board.create_date_time = now.toDate();
+            if (error || !results) {
+                callback(error, null);
+                connection.release();
+                return;
             }
-            callback(error, board);
-            connection.release();
+            var board = new Board();
+
+            board.id = results.insertId;
+            board.name = newBoard.name;
+            board.ownerId = newBoard.ownerId;
+            board.create_date_time = now.toDate();
+
+            if (newBoard.sections) {
+                var sectionRecordsInsert = "INSERT INTO board_section (name, color, board_id, order_num) VALUES ?";
+                var sectionRecords = [];
+                for (var i = 0; i < newBoard.sections.length; i++) {
+                    var section = newBoard.sections[i];
+                    sectionRecords.push([section.name, section.color, board.id, section.orderNum]);
+                }
+                connection.query(sectionRecordsInsert, [sectionRecords], function(error, results, fields) {
+
+                    callback(error, board);
+                    connection.release();
+
+                });
+            } else {
+                callback(error, board);
+                connection.release();
+            }
+
+
         });
     });
 };
@@ -283,6 +307,29 @@ RetroBoardDb.prototype.findBoardById = function(id, callback) {
         }
         connection.query('SELECT * FROM board WHERE id = ?', [id], function(error, results, fields) {
             var board = createBoardFromDatabaseResults(results);
+            callback(error, board);
+            connection.release();
+        });
+    });
+};
+
+RetroBoardDb.prototype.findBoardByIdPlusSections = function(id, callback) {
+    pool.getConnection(function(error, connection) {
+        if (error) {
+            callback(error, null);
+            return;
+        }
+
+        var query = "select b.id, b.name, b.owner_id, b.create_date_time, " +
+        "bs.id as section_id, bs.name as section_name, " +
+        "bs.color as section_color, bs.order_num as section_order_num " +
+        "from board b " +
+        "left join board_section bs on b.id = bs.board_id " +
+        "where b.id = ? " +
+        "order by bs.order_num ";
+
+        connection.query(query, [id], function(error, results, fields) {
+            var board = createBoardPlusSectionsFromDatabaseResults(results);
             callback(error, board);
             connection.release();
         });
@@ -392,14 +439,16 @@ RetroBoardDb.prototype.findBoardNotes = function(boardId, callback) {
             callback(error, null);
             return;
         }
-        connection.query(
-            'SELECT n.id, n.creator_id, n.create_date_time, n.board_id, ' +
-            'n.message, n.top_pos, n.left_pos, n.sticky_id, n.section, unv.user_id  ' +
+        var query = 'SELECT n.id, n.creator_id, n.create_date_time, n.board_id, ' +
+            'n.message, n.top_pos, n.left_pos, n.sticky_id, n.board_section_id, unv.user_id, bs.name as section_name  ' +
             'FROM note n ' +
             'left join ' +
             'board b on n.board_id = b.id ' +
             'left join user_note_vote unv on n.id = unv.note_id ' +
-            'WHERE b.id = ?',
+            'left join board_section bs on n.board_section_id = bs.id ' +
+            'WHERE b.id = ?';
+        console.log(query);
+        connection.query(query,
             [boardId],
             function(error, results, fields) {
                 var notes = createNotesWithVotesFromDatabaseResults(results);
@@ -409,14 +458,14 @@ RetroBoardDb.prototype.findBoardNotes = function(boardId, callback) {
     });
 };
 
-RetroBoardDb.prototype.updateNotePosition = function(top, left, stickyId, section, callback) {
+RetroBoardDb.prototype.updateNotePosition = function(top, left, stickyId, sectionId, callback) {
     pool.getConnection(function(error, connection) {
         if (error) {
             callback(error, null);
             return;
         }
         var updateString = "UPDATE note SET top_pos = " + top +
-            ", left_pos = " + left + ", section = '" + section + "' where sticky_id = '" + stickyId + "'";
+            ", left_pos = " + left + ", board_section_id = '" + sectionId + "' where sticky_id = '" + stickyId + "'";
         connection.query(updateString, function(error, results, fields) {
             callback(error);
             connection.release();
@@ -600,7 +649,8 @@ function createNotesWithVotesFromDatabaseResults(results) {
 
             var note = new Note(results[i].creator_id, results[i].create_date_time, results[i].board_id, results[i].message,
                 results[i].top_pos, results[i].left_pos, results[i].sticky_id, results[i].id);
-            note.section = results[i].section;
+            note.sectionId = results[i].board_section_id;
+            note.sectionName = results[i].section_name;
             if (results[i].user_id) {
                 note.userVotes = [];
                 note.userVotes.push(results[i].user_id);
@@ -630,6 +680,21 @@ function createBoardFromDatabaseResults(results) {
         return null;
     }
     return boards[0];
+}
+
+
+function createBoardPlusSectionsFromDatabaseResults(results) {
+    if (!results || results.length == 0) {
+        return null;
+    }
+
+    var board = new Board(results[0].name, results[0].owner_id, results[0].create_date_time, results[0].id);
+    board.sections = [];
+    for (var i = 0; i < results.length; i++) {
+        var section = new Section(results[i].section_id, results[i].section_name, results[i].section_color, results[i].section_order_num);
+        board.sections.push(section);
+    }
+    return board;
 }
 
 

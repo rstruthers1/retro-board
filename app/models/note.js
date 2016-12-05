@@ -13,7 +13,8 @@ function Note(creatorId, createDateTime, boardId, message, top, left, stickyId, 
     this.stickyId = stickyId;
     this.id = id;
     this.userVotes = null;
-    this.section = null;
+    this.sectionId = null;
+    this.sectionName = null;
 }
 
 module.exports = Note;
